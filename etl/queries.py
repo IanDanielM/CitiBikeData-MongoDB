@@ -24,14 +24,12 @@ class Queries(ExtractTransformLoad):
     def get_average_trip_duration(self):
         return self.default_collection.aggregate(
             [
-                # Convert starttime and stoptime to date objects if they are strings
                 {
                     "$addFields": {
                         "converted_starttime": {"$toDate": "$starttime"},
                         "converted_stoptime": {"$toDate": "$stoptime"}
                     }
                 },
-                # Calculate the duration and average
                 {
                     "$group": {
                         "_id": None,
@@ -50,14 +48,12 @@ class Queries(ExtractTransformLoad):
     def get_average_trip_duration_by_bike(self):
         return self.default_collection.aggregate(
             [
-                # Convert starttime and stoptime to date objects if they are strings
                 {
                     "$addFields": {
                         "converted_starttime": {"$toDate": "$starttime"},
                         "converted_stoptime": {"$toDate": "$stoptime"}
                     }
                 },
-                # Calculate the duration and average
                 {
                     "$group": {
                         "_id": "$bikeid",
@@ -126,7 +122,6 @@ class Queries(ExtractTransformLoad):
     def longest_trips(self):
         return self.default_collection.aggregate(
             [
-                # Convert starttime and stoptime to date objects if they are strings
                 {
                     "$addFields": {
                         "converted_starttime": {"$toDate": "$starttime"},
@@ -141,7 +136,6 @@ class Queries(ExtractTransformLoad):
                         }
                     }
                 },
-                # Calculate the duration and average
                 {
                     "$sort": {"duration": -1}
                 },
@@ -223,13 +217,11 @@ class Queries(ExtractTransformLoad):
         return self.default_collection.aggregate([
             {
                 "$addFields": {
-                    # Convert starttime to Date
                     "converted_starttime": {"$toDate": "$starttime"}
                 }
             },
             {
                 "$addFields": {
-                    # Extract the month from the converted Date
                     "month": {"$month": "$converted_starttime"}
                 }
             },
@@ -277,14 +269,12 @@ class Queries(ExtractTransformLoad):
     def get_average_trip_duration_by_user_type(self):
         return self.default_collection.aggregate(
             [
-                # Convert starttime and stoptime to date objects if they are strings
                 {
                     "$addFields": {
                         "converted_starttime": {"$toDate": "$starttime"},
                         "converted_stoptime": {"$toDate": "$stoptime"}
                     }
                 },
-                # Calculate the duration and average
                 {
                     "$group": {
                         "_id": "$usertype",
@@ -333,9 +323,3 @@ class Queries(ExtractTransformLoad):
                 "$sort": {"_id.birth_year": 1, "_id.gender": 1}
             }
         ])
-
-
-queries = Queries("citibike", "trips")
-data = queries.aggregate_by_birth_year_and_gender()
-for data in data:
-    print(data)
