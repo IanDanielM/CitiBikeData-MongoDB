@@ -5,7 +5,7 @@ client = MongoClient()
 
 
 class ExtractTransformLoad:
-    def __init__(self, db_name: str, collection_name: str = None):
+    def __init__(self, db_name: str, collection_name: str = None) -> None:
         self.client = MongoClient()
         self.db = self.client[db_name]
         self.default_collection = None
@@ -13,7 +13,7 @@ class ExtractTransformLoad:
         if collection_name:
             self.default_collection = self.get_collection(collection_name)
 
-    def get_collection(self, collection_name: str = None):
+    def get_collection(self, collection_name: str = None) -> None:
         if collection_name:
             return self.db[collection_name]
         elif self.default_collection:
