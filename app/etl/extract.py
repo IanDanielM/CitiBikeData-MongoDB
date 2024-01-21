@@ -1,7 +1,9 @@
 import pandas as pd
+import streamlit as st
 from pymongo import MongoClient
 
-client = MongoClient()
+
+client = MongoClient(**st.secrets["mongo"])
 
 
 class ExtractTransformLoad:

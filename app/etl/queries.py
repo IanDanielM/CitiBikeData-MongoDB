@@ -1,4 +1,4 @@
-from extract import ExtractTransformLoad
+from etl.extract import ExtractTransformLoad
 
 
 class Queries(ExtractTransformLoad):
@@ -6,8 +6,14 @@ class Queries(ExtractTransformLoad):
         super().__init__(db_name, collection_name)
 
     # all data
-    def get_all_data(self) -> list:
-        return list(self.default_collection.find({}))
+    def get_data(self, page_num=1, page_size=50) -> list:
+        skip = (page_num - 1) * page_size
+        return self.default_collection.find({}, {"_id": 0,
+                                                 "start station name": 1,
+                                                 "end station name": 1,
+                                                 "tripduration": 1,
+                                                 "bikeid": 1,
+                                                 "usertype": 1}).skip(skip).limit(page_size)
 
     # total trips
     def get_total_trips(self) -> int:
