@@ -5,23 +5,34 @@ class Queries(ExtractTransformLoad):
     def __init__(self, db_name: str, collection_name: str):
         super().__init__(db_name, collection_name)
 
+    def count_documents(self) -> int:
+        return self.default_collection.count_documents({})
+
     # all data
-    def get_data(self, page_num=1, page_size=50) -> list:
+    def get_data(self, page_num=1, page_size=51) -> list:
         skip = (page_num - 1) * page_size
         return self.default_collection.find({}, {"_id": 0,
-                                                 "start station name": 1,
-                                                 "end station name": 1,
-                                                 "tripduration": 1,
-                                                 "bikeid": 1,
-                                                 "usertype": 1}).skip(skip).limit(page_size)
+                                                 "start_station_name": 1,
+                                                 "end_station_name": 1,
+                                                 "rideable_type": 1,
+                                                 "member_casual": 1}).skip(skip).limit(page_size)
 
     # total trips
     def get_total_trips(self) -> int:
         return self.default_collection.count_documents({})
 
     # specific record
-    def find_bike(self, value: int):
-        return self.default_collection.find_one({"bikeid": value})
+    def bike_count(self, value: int):
+        return self.default_collection.aggregate(
+            [
+                {
+                    "$group": {
+                        "_id": "$rideable_type",
+                        "count": {"$sum": 1}
+                    }
+                }
+            ]
+        )
 
     def get_unique_start_stations(self):
         return self.default_collection.distinct("start station name")
@@ -32,8 +43,8 @@ class Queries(ExtractTransformLoad):
             [
                 {
                     "$addFields": {
-                        "converted_starttime": {"$toDate": "$starttime"},
-                        "converted_stoptime": {"$toDate": "$stoptime"}
+                        "converted_starttime": {"$toDate": "$started_at"},
+                        "converted_stoptime": {"$toDate": "$ended_at"}
                     }
                 },
                 {
@@ -56,13 +67,13 @@ class Queries(ExtractTransformLoad):
             [
                 {
                     "$addFields": {
-                        "converted_starttime": {"$toDate": "$starttime"},
-                        "converted_stoptime": {"$toDate": "$stoptime"}
+                        "converted_starttime": {"$toDate": "$started_at"},
+                        "converted_stoptime": {"$toDate": "$ended_at"}
                     }
                 },
                 {
                     "$group": {
-                        "_id": "$bikeid",
+                        "_id": "$rideable_type",
                         "avg_duration": {
                             "$avg": {
                                 "$subtract": ["$converted_stoptime",
@@ -83,31 +94,30 @@ class Queries(ExtractTransformLoad):
 
     # Filter by User Type: Find all records where 'usertype' is 'Subscriber'.
     def filter_by_user_type(self):
-        return self.default_collection.find({'usertype': 'Subscriber'},
-                                            {'usertype': 1,
-                                             'gender': 1,
-                                             'tripduration': 1,
+        return self.default_collection.find({'member_casual': 'member'},
+                                            {'member_casual': 1,
+                                             'rideable_type': 1,
                                              '_id': 0})
 
-    # Count by Gender: Count the number of records for each 'gender'.
-    def gender_count(self):
+    # Count by User Type: Count the number of records for each 'usertype'.
+    def count_by_user_type(self):
         return self.default_collection.aggregate(
             [
                 {
                     "$group": {
-                        "_id": "$gender",
+                        "_id": "$member_casual",
                         "count": {"$sum": 1}
+                    }
+                },
+                {
+                    "$project": {
+                        "usertype": "$_id",
+                        "_id": 0,
+                        "count": 1
                     }
                 }
             ]
-
         )
-
-    # Birth Year Range: Find all trips made by users born between 1980 and 1990.
-    def birth_year_range(self):
-        return self.default_collection.find({
-            "birth year": {"$lt": 1990, "$gte": 1980}},
-            {'usertype': 1, 'gender': 1, 'tripduration': 1, 'birth year': 1, '_id': 0})
 
     # Group by Start Station: Count the number of trips that started from each 'start station name'.
     def group_by_start_station(self):
@@ -115,7 +125,7 @@ class Queries(ExtractTransformLoad):
             [
                 {
                     "$group": {
-                        "_id": "$start station name",
+                        "_id": "$start_station_name",
                         "count": {
                             "$sum": 1
                         }
@@ -130,8 +140,8 @@ class Queries(ExtractTransformLoad):
             [
                 {
                     "$addFields": {
-                        "converted_starttime": {"$toDate": "$starttime"},
-                        "converted_stoptime": {"$toDate": "$stoptime"}
+                        "converted_starttime": {"$toDate": "$started_at"},
+                        "converted_stoptime": {"$toDate": "$ended_at"}
                     }
                 },
                 {
@@ -150,10 +160,10 @@ class Queries(ExtractTransformLoad):
                 },
                 {
                     "$project": {
-                        "bikeid": 1,
+                        "rideable_type": 1,
                         "duration": 1,
-                        "start station name": 1,
-                        "end station name": 1,
+                        "start_station_name": 1,
+                        "end_station_name": 1,
                         "_id": 0
                     }
                 }
@@ -163,31 +173,13 @@ class Queries(ExtractTransformLoad):
     # Start and Stop Station Same: Find records where the start and end stations are the same.
     def find_same_start_end_stations(self):
         return self.default_collection.find({"$expr": {"$eq": [
-            "$start station name",
-            "$end station name"]}},
+            "$start_station_name",
+            "$end_station_name"]}},
             {
             "_id": 0,
-            "start station name": 1,
-            "end station name": 1,
-            "tripduration": 1
+            "start_station_name": 1,
+            "end_station_name": 1,
         })
-
-    # Bikes Used Most Frequently: List the top 5 most frequently used 'bikeid'.
-    def most_used_bikes(self):
-        return self.default_collection.aggregate([
-            {
-                "$group": {
-                    "_id": "$bikeid",
-                    "usage_count": {"$sum": 1}
-                }
-            },
-            {
-                "$sort": {"usage_count": -1}
-            },
-            {
-                "$limit": 5
-            }
-        ])
 
     # Calculate Distance Traveled: Calculate the approximate distance traveled for each trip (using 'start station latitude/longitude' and 'end station latitude/longitude').
     def distane_covered_by_coordinates(self):
@@ -223,7 +215,7 @@ class Queries(ExtractTransformLoad):
         return self.default_collection.aggregate([
             {
                 "$addFields": {
-                    "converted_starttime": {"$toDate": "$starttime"}
+                    "converted_starttime": {"$toDate": "$started_at"}
                 }
             },
             {
@@ -277,13 +269,13 @@ class Queries(ExtractTransformLoad):
             [
                 {
                     "$addFields": {
-                        "converted_starttime": {"$toDate": "$starttime"},
-                        "converted_stoptime": {"$toDate": "$stoptime"}
+                        "converted_starttime": {"$toDate": "$started_at"},
+                        "converted_stoptime": {"$toDate": "$ended_at"}
                     }
                 },
                 {
                     "$group": {
-                        "_id": "$usertype",
+                        "_id": "$member_casual",
                         "avg_duration": {
                             "$avg": {
                                 "$subtract": ["$converted_stoptime",
@@ -294,38 +286,21 @@ class Queries(ExtractTransformLoad):
                 }
             ]
         )
-    # Most Popular Stations: Find the most popular start and end stations.
 
+    # Most Popular Stations: Find the most popular start and end stations.
     def most_popular_stations(self):
         return self.default_collection.aggregate([
             {"$facet": {
                 "popular_start_stations": [
-                    {"$group": {"_id": "$start station name", "count": {"$sum": 1}}},
+                    {"$group": {"_id": "$start_station_name", "count": {"$sum": 1}}},
                     {"$sort": {"count": -1}},
                     {"$limit": 5}
                 ],
                 "popular_end_stations": [
-                    {"$group": {"_id": "$end station name", "count": {"$sum": 1}}},
+                    {"$group": {"_id": "$end_station_name", "count": {"$sum": 1}}},
                     {"$sort": {"count": -1}},
                     {"$limit": 5}
                 ]
             }
-            }
-        ])
-
-    # Aggregate by Birth Year and Gender: Aggregate the data by 'birth year' and 'gender', counting trips for each group.
-    def aggregate_by_birth_year_and_gender(self):
-        return self.default_collection.aggregate([
-            {
-                "$group": {
-                    "_id": {
-                        "birth_year": "$birth year",
-                        "gender": "$gender"
-                    },
-                    "tripCount": {"$sum": 1}
-                }
-            },
-            {
-                "$sort": {"_id.birth_year": 1, "_id.gender": 1}
             }
         ])
