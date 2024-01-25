@@ -62,10 +62,6 @@ class ExtractTransformLoad:
     def load_data(self, collection_name: str, data: list) -> None:
         try:
             collection = self.get_collection(collection_name)
-            for doc in data:
-                if 'ride_id' in doc:
-                    doc['_id'] = doc['ride_id']
-
             collection.insert_many(data)
         except Exception as e:
             print(f"Error occurred while loading data: {e}")

@@ -22,13 +22,20 @@ class Queries(ExtractTransformLoad):
         return self.default_collection.count_documents({})
 
     # specific record
-    def bike_count(self, value: int):
+    def bike_count(self):
         return self.default_collection.aggregate(
             [
                 {
                     "$group": {
                         "_id": "$rideable_type",
                         "count": {"$sum": 1}
+                    }
+                },
+                {
+                    "$project": {
+                        "bike type": "$_id",
+                        "_id": 0,
+                        "count": 1
                     }
                 }
             ]
@@ -84,6 +91,35 @@ class Queries(ExtractTransformLoad):
                 }
             ]
         )
+
+    # Average Trip Duration by User Type
+    def get_average_trip_duration_by_user_type(self):
+        return self.default_collection.aggregate([
+            {
+                "$addFields": {
+                    "converted_starttime": {"$toDate": "$started_at"},
+                    "converted_stoptime": {"$toDate": "$ended_at"}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$member_casual",
+                    "average_duration": {
+                        "$avg": {
+                            "$subtract": ["$converted_stoptime",
+                                          "$converted_starttime"]
+                        }
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "member_type": "$_id",
+                    "_id": 0,
+                    "average_duration": 1
+                }
+            }
+        ])
 
     # Sort Records by Trip Duration
     def sort_by_trip_duration(self):
@@ -263,30 +299,6 @@ class Queries(ExtractTransformLoad):
             }
         ])
 
-    # Average Trip Duration by User Type: Calculate the average trip duration for each 'usertype'.
-    def get_average_trip_duration_by_user_type(self):
-        return self.default_collection.aggregate(
-            [
-                {
-                    "$addFields": {
-                        "converted_starttime": {"$toDate": "$started_at"},
-                        "converted_stoptime": {"$toDate": "$ended_at"}
-                    }
-                },
-                {
-                    "$group": {
-                        "_id": "$member_casual",
-                        "avg_duration": {
-                            "$avg": {
-                                "$subtract": ["$converted_stoptime",
-                                              "$converted_starttime"]
-                            }
-                        }
-                    }
-                }
-            ]
-        )
-
     # Most Popular Stations: Find the most popular start and end stations.
     def most_popular_stations(self):
         return self.default_collection.aggregate([
@@ -294,13 +306,94 @@ class Queries(ExtractTransformLoad):
                 "popular_start_stations": [
                     {"$group": {"_id": "$start_station_name", "count": {"$sum": 1}}},
                     {"$sort": {"count": -1}},
-                    {"$limit": 5}
+                    {"$limit": 10},
+                    {"$project": {"start station name": "$_id", "count": 1, "_id": 0}}
                 ],
                 "popular_end_stations": [
                     {"$group": {"_id": "$end_station_name", "count": {"$sum": 1}}},
                     {"$sort": {"count": -1}},
-                    {"$limit": 5}
+                    {"$limit": 10},
+                    {"$project": {"end station name": "$_id", "count": 1, "_id": 0}}
                 ]
             }
+            }
+        ])
+
+    def get_bikes_used_by_member(self):
+        return self.default_collection.aggregate([
+            {
+                "$match": {
+                    "member_casual": "member"
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$rideable_type",
+                    "count": {"$sum": 1},
+                    "member_type": {"$first": "$member_casual"}
+                }
+            },
+            {
+                "$sort": {"count": -1}
+            },
+            {
+                "$project": {
+                    "bike_type": "$_id",
+                    "count": 1,
+                    "member_type": 1,
+                    "_id": 0
+                }
+            }
+        ])
+
+    def get_peak_usage_hours(self):
+        return self.default_collection.aggregate([
+            {
+                "$addFields": {
+                    "hour": {"$hour": {"$toDate": "$started_at"}}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$hour",
+                    "count": {"$sum": 1}
+                }
+            },
+            {
+                "$sort": {"count": -1}
+            },
+            {
+                "$project": {
+                    "hour": "$_id",
+                    "count": 1,
+                    "_id": 0
+                }
+            }
+        ])
+
+    def get_peak_usage_hours_with_day(self):
+        return self.default_collection.aggregate([
+            {
+                "$project": {
+                    "hour_started": {"$hour": "$started_at"},
+                    "day_of_week": {"$dayOfWeek": "$started_at"}
+                }
+            },
+            {
+                "$group": {
+                    "_id": {"hour": "$hour_started", "dayOfWeek": "$day_of_week"},
+                    "count": {"$sum": 1}
+                }
+            },
+            {
+                "$sort": {"_id.hour": 1}
+            },
+            {
+                "$project": {
+                    "hour": "$_id.hour",
+                    "dayOfWeek": "$_id.dayOfWeek",
+                    "count": 1,
+                    "_id": 0
+                }
             }
         ])
