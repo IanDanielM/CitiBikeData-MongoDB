@@ -5,7 +5,12 @@ class Queries(ExtractTransformLoad):
     def __init__(self, db_name: str, collection_name: str):
         super().__init__(db_name, collection_name)
 
+    # count total documents
     def count_documents(self) -> int:
+        return self.default_collection.count_documents({})
+
+    # count total trips
+    def get_total_trips(self) -> int:
         return self.default_collection.count_documents({})
 
     # all data
@@ -26,11 +31,53 @@ class Queries(ExtractTransformLoad):
             .limit(page_size)
         )
 
-    # total trips
-    def get_total_trips(self) -> int:
-        return self.default_collection.count_documents({})
+    # get unique start stations
+    def get_unique_start_stations(self):
+        return self.default_collection.distinct("start station name")
 
-    # specific record
+        # Get trip data without any transformations
+
+    def get_raw_trip_data(self):
+        return self.default_collection.aggregate(
+            [
+                {
+                    "$project": {
+                        "_id": 0,
+                        "member_casual": 1,
+                        "rideable_type": 1,
+                        "started_at": 1,
+                        "ended_at": 1,
+                        "start_lat": 1,
+                        "start_lng": 1,
+                        "end_lat": 1,
+                        "end_lng": 1,
+                    }
+                }
+            ]
+        )
+
+    # Get 1000 random trips
+    def get_trip_data(self):
+        return self.default_collection.aggregate(
+            [
+                {"$sample": {"size": 1000}},
+                {
+                    "$project": {
+                        "start_lat": 1,
+                        "start_lng": 1,
+                        "end_lat": 1,
+                        "end_lng": 1,
+                        "member_casual": 1,
+                        "started_at": 1,
+                        "ended_at": 1,
+                        "start_station_name": 1,
+                        "end_station_name": 1,
+                    }
+                },
+            ]
+        )
+
+    # get bike type count
     def bike_count(self):
         return self.default_collection.aggregate(
             [
@@ -39,10 +86,8 @@ class Queries(ExtractTransformLoad):
             ]
         )
 
-    def get_unique_start_stations(self):
-        return self.default_collection.distinct("start station name")
-
     # Average Trip Duration
+
     def get_average_trip_duration(self):
         return self.default_collection.aggregate(
             [
@@ -94,34 +139,8 @@ class Queries(ExtractTransformLoad):
             ]
         )
 
-    # Average Trip Duration by User Type
-    def get_average_trip_duration_by_user_type(self):
-        return self.default_collection.aggregate(
-            [
-                {
-                    "$addFields": {
-                        "converted_starttime": {"$toDate": "$started_at"},
-                        "converted_stoptime": {"$toDate": "$ended_at"},
-                    }
-                },
-                {
-                    "$group": {
-                        "_id": "$member_casual",
-                        "average_duration": {
-                            "$avg": {
-                                "$subtract": [
-                                    "$converted_stoptime",
-                                    "$converted_starttime",
-                                ]
-                            }
-                        },
-                    }
-                },
-                {"$project": {"member_type": "$_id", "_id": 0, "average_duration": 1}},
-            ]
-        )
+        # Filter by User Type: Find all records where 'usertype' is 'Subscriber'.
 
-    # Filter by User Type: Find all records where 'usertype' is 'Subscriber'.
     def filter_by_user_type(self):
         return self.default_collection.find(
             {"member_casual": "member"},
@@ -163,6 +182,33 @@ class Queries(ExtractTransformLoad):
                 {"$group": {"_id": "$month", "total_trips": {"$sum": 1}}},
                 {"$sort": {"_id": 1}},
                 {"$project": {"month": "$_id", "total_trips": 1, "_id": 0}},
+            ]
+        )
+
+    # Average Trip Duration by User Type
+    def get_average_trip_duration_by_user_type(self):
+        return self.default_collection.aggregate(
+            [
+                {
+                    "$addFields": {
+                        "converted_starttime": {"$toDate": "$started_at"},
+                        "converted_stoptime": {"$toDate": "$ended_at"},
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": "$member_casual",
+                        "average_duration": {
+                            "$avg": {
+                                "$subtract": [
+                                    "$converted_stoptime",
+                                    "$converted_starttime",
+                                ]
+                            }
+                        },
+                    }
+                },
+                {"$project": {"member_type": "$_id", "_id": 0, "average_duration": 1}},
             ]
         )
 
@@ -211,6 +257,7 @@ class Queries(ExtractTransformLoad):
             ]
         )
 
+    # Get bikes used by members
     def get_bikes_used_by_member(self):
         return self.default_collection.aggregate(
             [
@@ -234,6 +281,7 @@ class Queries(ExtractTransformLoad):
             ]
         )
 
+    # Peak Usage Hours
     def get_peak_usage_hours(self):
         return self.default_collection.aggregate(
             [
@@ -244,6 +292,7 @@ class Queries(ExtractTransformLoad):
             ]
         )
 
+    # Peak Usage Hours by Day of Week
     def get_peak_usage_hours_with_day(self):
         return self.default_collection.aggregate(
             [

@@ -50,6 +50,7 @@ class ExtractTransformLoad:
                 df = pd.read_csv(csv_path)
                 df["started_at"] = pd.to_datetime(df["started_at"])
                 df["ended_at"] = pd.to_datetime(df["ended_at"])
+                df.dropna(inplace=True)
                 data = df.to_dict("records")
 
                 self.load_data(collection_name, data)
