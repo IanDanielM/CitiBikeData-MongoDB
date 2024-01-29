@@ -3,90 +3,14 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from etl.queries import Queries
 from streamlit_folium import folium_static
 
-queries = Queries("citibike", "trips")
-
-# Streamlit Layout
-st.set_page_config(
-    page_title="CitiBike Data Analysis", page_icon=":bike:", layout="wide"
-)
-st.title(":bike: CitiBike 2023 Data Analysis And Visualization")
-st.markdown(
-    """
-    This app provides an interactive way to explore Citibike data.
-    You can execute various queries to analyze trip data and visualize the results.
-    Visualize or Select a query from the sidebar and provide the necessary inputs to get started.
-"""
-)
-
-# Get total trips and average trip duration
-total_trips = queries.get_total_trips()
-average_trip_duration = queries.get_average_trip_duration()
-for duration in average_trip_duration:
-    avg_duration = round((duration["avg_duration"] / 60000), 2)
+from app.etl.queries import Queries
+from app.visualize.helpers import haversine_vectorized
+from app.visualize.setup import queries
 
 
-def lat_lon_to_radians(df, lat_col, lon_col):
-    return np.radians(df[[lat_col, lon_col]])
-
-
-# Vectorized Haversine function
-def haversine_vectorized(start_lats, start_lons, end_lats, end_lons):
-    # Radius of the Earth in kilometers
-    R = 6371.0
-
-    # Convert degrees to radians
-    start_lats, start_lons, end_lats, end_lons = map(
-        np.radians, [start_lats, start_lons, end_lats, end_lons]
-    )
-
-    # Differences in coordinates
-    dlat = end_lats - start_lats
-    dlon = end_lons - start_lons
-
-    # Haversine formula
-    a = (
-        np.sin(dlat / 2.0) ** 2
-        + np.cos(start_lats) * np.cos(end_lats) * np.sin(dlon / 2.0) ** 2
-    )
-    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
-    distance = R * c
-    return distance
-
-
-first_column, second_column = st.columns(2)
-with first_column:
-    st.subheader("Total Trips Covered")
-    st.write(f"{total_trips} trips")
-
-with second_column:
-    st.subheader("Average Trip Duration")
-    st.write(f"{avg_duration} minutes")
-
-
-with st.sidebar:
-    st.sidebar.header("Choose a Query")
-    query_type = st.sidebar.selectbox(
-        "Select Query",
-        [
-            "User Types",
-            "Bike Types",
-            "Bike Types Used By Members",
-            "Popular Stations",
-            "Peak Hours",
-            "Peak Hours With Day",
-            "Total Trips Per Month",
-            "Average trip duration per user types",
-            "Average Speed Per User Type",
-            "Visualize Trip Data",
-        ],
-    )
-
-data_col, viz_col = st.columns(2)
-
-if query_type == "User Types":
+def st_user_types(data_col, viz_col):
     user_types = queries.count_by_user_type()
     user_types_list = list(user_types)
     user_types_df = pd.DataFrame(user_types_list, columns=["count", "usertype"])
@@ -109,7 +33,8 @@ if query_type == "User Types":
         fig.update_traces(textposition="inside", textinfo="percent+label")
         st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
-elif query_type == "Bike Types":
+
+def st_bike_types(data_col, viz_col):
     bike_types = queries.bike_count()
     bike_types_list = list(bike_types)
     bike_types_df = pd.DataFrame(bike_types_list, columns=["count", "bike type"])
@@ -140,7 +65,8 @@ elif query_type == "Bike Types":
         fig.update_traces(textposition="inside", textinfo="percent+label")
         st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
-elif query_type == "Bike Types Used By Members":
+
+def st_bike_types_used_by_members(data_col, viz_col):
     bike_types = queries.get_bikes_used_by_member()
     bike_types_list = list(bike_types)
     bike_types_df = pd.DataFrame(
@@ -167,7 +93,8 @@ elif query_type == "Bike Types Used By Members":
         )
         st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
-elif query_type == "Average trip duration per user types":
+
+def st_average_trip_duration_per_user_types(data_col, viz_col):
     user_average_duration = queries.get_average_trip_duration_by_user_type()
     user_average_duration_list = list(user_average_duration)
     user_average_duration_df = pd.DataFrame(
@@ -201,7 +128,8 @@ elif query_type == "Average trip duration per user types":
         )
         st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
-elif query_type == "Popular Stations":
+
+def st_popular_stations(data_col, viz_col):
     popular_stations_cursor = queries.most_popular_stations()
     popular_stations_list = list(popular_stations_cursor)
     popular_stations_data = popular_stations_list[0]
@@ -253,7 +181,8 @@ elif query_type == "Popular Stations":
         )
         st.plotly_chart(fig_end, use_container_width=True)
 
-elif query_type == "Peak Hours":
+
+def st_peak_hours(data_col, viz_col):
     peak_hours_cursor = queries.get_peak_usage_hours()
     peak_hours_list = list(peak_hours_cursor)
     peak_hours_df = pd.DataFrame(peak_hours_list, columns=["hour", "count"])
@@ -281,7 +210,8 @@ elif query_type == "Peak Hours":
         )
         st.plotly_chart(fig, use_container_width=True)
 
-elif query_type == "Peak Hours With Day":
+
+def st_peak_hours_with_day(data_col, viz_col):
     peak_hours_cursor = queries.get_peak_usage_hours_with_day()
     peak_hours_list = list(peak_hours_cursor)
     peak_hours_df = pd.DataFrame(peak_hours_list, columns=["hour", "day", "count"])
@@ -344,7 +274,8 @@ elif query_type == "Peak Hours With Day":
         )
         st.plotly_chart(fig, use_container_width=True)
 
-elif query_type == "Average Speed Per User Type":
+
+def st_average_speed_per_user_and_bike_type(data_col, viz_col):
     average_speed_cursor = queries.get_raw_trip_data()
     average_speed_list = list(average_speed_cursor)
     average_speed_df = pd.DataFrame(average_speed_list)
@@ -435,7 +366,7 @@ elif query_type == "Average Speed Per User Type":
         st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
 
-elif query_type == "Visualize Trip Data":
+def st_map_visualization():
     trip_data_cursor = queries.get_trip_data()
     trip_data_list = list(trip_data_cursor)
     trip_data_df = pd.DataFrame(trip_data_list)

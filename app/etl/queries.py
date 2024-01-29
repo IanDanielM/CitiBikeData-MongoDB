@@ -1,4 +1,4 @@
-from etl.extract import ExtractTransformLoad
+from app.etl.extract import ExtractTransformLoad
 
 
 class Queries(ExtractTransformLoad):
