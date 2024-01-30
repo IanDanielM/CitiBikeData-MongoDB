@@ -21,7 +21,8 @@ def haversine_vectorized(start_lats, start_lons, end_lats, end_lons):
 
     # Haversine formula
     a = (
-        np.sin(dlat / 2.0) ** 2 + np.cos(start_lats) * np.cos(end_lats) * np.sin(dlon / 2.0) ** 2
+        np.sin(dlat / 2.0) ** 2
+        + np.cos(start_lats) * np.cos(end_lats) * np.sin(dlon / 2.0) ** 2
     )
     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
     distance = R * c

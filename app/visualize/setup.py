@@ -1,21 +1,8 @@
-import folium
-import numpy as np
-import pandas as pd
-import plotly.express as px
 import streamlit as st
-from streamlit_folium import folium_static
-
-from app.etl.queries import Queries
-from app.visualize.helpers import haversine_vectorized
-
-queries = Queries("citibike", "trips")
 
 
 # Streamlit Layout
-def top_bar():
-    st.set_page_config(
-        page_title="CitiBike Data Analysis", page_icon=":bike:", layout="wide"
-    )
+def top_bar(queries):
     st.title(":bike: CitiBike 2023 Data Analysis And Visualization")
     st.markdown(
         """
@@ -43,6 +30,7 @@ def sidebar_ops(query_type):
     with st.sidebar:
         st.sidebar.header("Choose a Query")
         query_types = [
+            "Custom Query",
             "User Types",
             "Bike Types",
             "Bike Types Used By Members",

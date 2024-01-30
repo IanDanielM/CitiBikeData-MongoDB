@@ -5,12 +5,10 @@ import plotly.express as px
 import streamlit as st
 from streamlit_folium import folium_static
 
-from app.etl.queries import Queries
 from app.visualize.helpers import haversine_vectorized
-from app.visualize.setup import queries
 
 
-def st_user_types(data_col, viz_col):
+def st_user_types(queries, data_col, viz_col):
     user_types = queries.count_by_user_type()
     user_types_list = list(user_types)
     user_types_df = pd.DataFrame(user_types_list, columns=["count", "usertype"])
@@ -34,7 +32,7 @@ def st_user_types(data_col, viz_col):
         st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
 
-def st_bike_types(data_col, viz_col):
+def st_bike_types(queries, data_col, viz_col):
     bike_types = queries.bike_count()
     bike_types_list = list(bike_types)
     bike_types_df = pd.DataFrame(bike_types_list, columns=["count", "bike type"])
@@ -66,7 +64,7 @@ def st_bike_types(data_col, viz_col):
         st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
 
-def st_bike_types_used_by_members(data_col, viz_col):
+def st_bike_types_used_by_members(queries, data_col, viz_col):
     bike_types = queries.get_bikes_used_by_member()
     bike_types_list = list(bike_types)
     bike_types_df = pd.DataFrame(
@@ -94,7 +92,7 @@ def st_bike_types_used_by_members(data_col, viz_col):
         st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
 
-def st_average_trip_duration_per_user_types(data_col, viz_col):
+def st_average_trip_duration_per_user_types(queries, data_col, viz_col):
     user_average_duration = queries.get_average_trip_duration_by_user_type()
     user_average_duration_list = list(user_average_duration)
     user_average_duration_df = pd.DataFrame(
@@ -129,7 +127,7 @@ def st_average_trip_duration_per_user_types(data_col, viz_col):
         st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
 
-def st_popular_stations(data_col, viz_col):
+def st_popular_stations(queries, data_col, viz_col):
     popular_stations_cursor = queries.most_popular_stations()
     popular_stations_list = list(popular_stations_cursor)
     popular_stations_data = popular_stations_list[0]
@@ -182,7 +180,7 @@ def st_popular_stations(data_col, viz_col):
         st.plotly_chart(fig_end, use_container_width=True)
 
 
-def st_peak_hours(data_col, viz_col):
+def st_peak_hours(queries, data_col, viz_col):
     peak_hours_cursor = queries.get_peak_usage_hours()
     peak_hours_list = list(peak_hours_cursor)
     peak_hours_df = pd.DataFrame(peak_hours_list, columns=["hour", "count"])
@@ -211,7 +209,7 @@ def st_peak_hours(data_col, viz_col):
         st.plotly_chart(fig, use_container_width=True)
 
 
-def st_peak_hours_with_day(data_col, viz_col):
+def st_peak_hours_with_day(queries, data_col, viz_col):
     peak_hours_cursor = queries.get_peak_usage_hours_with_day()
     peak_hours_list = list(peak_hours_cursor)
     peak_hours_df = pd.DataFrame(peak_hours_list, columns=["hour", "day", "count"])
@@ -275,7 +273,7 @@ def st_peak_hours_with_day(data_col, viz_col):
         st.plotly_chart(fig, use_container_width=True)
 
 
-def st_average_speed_per_user_and_bike_type(data_col, viz_col):
+def st_average_speed_per_user_and_bike_type(queries, data_col, viz_col):
     average_speed_cursor = queries.get_raw_trip_data()
     average_speed_list = list(average_speed_cursor)
     average_speed_df = pd.DataFrame(average_speed_list)
@@ -366,7 +364,7 @@ def st_average_speed_per_user_and_bike_type(data_col, viz_col):
         st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
 
-def st_map_visualization():
+def st_map_visualization(queries):
     trip_data_cursor = queries.get_trip_data()
     trip_data_list = list(trip_data_cursor)
     trip_data_df = pd.DataFrame(trip_data_list)
