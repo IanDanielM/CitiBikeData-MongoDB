@@ -273,6 +273,36 @@ def st_peak_hours_with_day(queries, data_col, viz_col):
         st.plotly_chart(fig, use_container_width=True)
 
 
+def st_total_trips_per_month(_queries, data_col_id, viz_col_id):
+    total_trips_cursor = _queries.get_total_trips_per_month()
+    total_trips_list = list(total_trips_cursor)
+    total_trips_df = pd.DataFrame(total_trips_list, columns=["month", "total_trips"])
+    total_trips_df["month"] = total_trips_df["month"].replace(
+        {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June", 7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"}
+    )
+
+    with data_col_id:
+        # Data for total trips per month
+        st.caption("Total Trips Per Month Data")
+        st.dataframe(
+            total_trips_df,
+            hide_index=True,
+            use_container_width=True,
+            column_order=["month", "total_trips"],
+        )
+
+    with viz_col_id:
+        # Plot for total trips per month
+        fig = px.line(
+            total_trips_df,
+            x="month",
+            y="total_trips",
+            title="Total Trips Per Month",
+            labels={"month": "Month", "total_trips": "Total Trips"},
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+
 def st_average_speed_per_user_and_bike_type(queries, data_col, viz_col):
     average_speed_cursor = queries.get_raw_trip_data()
     average_speed_list = list(average_speed_cursor)
@@ -362,38 +392,3 @@ def st_average_speed_per_user_and_bike_type(queries, data_col, viz_col):
             title="Average Speed Per Bike Type",
         )
         st.plotly_chart(fig, use_container_width=True, theme="streamlit")
-
-
-def st_map_visualization(queries):
-    trip_data_cursor = queries.get_trip_data()
-    trip_data_list = list(trip_data_cursor)
-    trip_data_df = pd.DataFrame(trip_data_list)
-    trip_data_df.dropna(inplace=True)
-    avg_lat = trip_data_df["start_lat"].mean()
-    avg_lng = trip_data_df["start_lng"].mean()
-
-    # Create a map object
-    trip_map = folium.Map(location=[avg_lat, avg_lng], zoom_start=15)
-    for _, row in trip_data_df.iterrows():
-        start_coords = [row["start_lat"], row["start_lng"]]
-        end_coords = [row["end_lat"], row["end_lng"]]
-
-        folium.Marker(
-            start_coords,
-            tooltip=row["start_station_name"],
-            icon=folium.Icon(color="green", icon="play"),
-            popup=f"Trip Starts at [{row['start_station_name']} ends at {row['end_station_name']}]",
-        ).add_to(trip_map)
-
-        folium.Marker(
-            end_coords,
-            tooltip=row["end_station_name"],
-            icon=folium.Icon(color="red", icon="stop"),
-            popup=f"Trip Starts at [{row['start_station_name']} ends at {row['end_station_name']}]",
-        ).add_to(trip_map)
-        folium.PolyLine(
-            [start_coords, end_coords], color="gray", weight=1.5, opacity=1
-        ).add_to(trip_map)
-
-    # Display the map
-    folium_static(trip_map, width=1000)

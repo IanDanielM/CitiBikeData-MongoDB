@@ -11,6 +11,7 @@ def top_bar(queries):
     Visualize or Select a query from the sidebar and provide the necessary inputs to get started.
     """
     )
+    avg_duration = 0
     total_trips = queries.get_total_trips()
     average_trip_duration = queries.get_average_trip_duration()
     for duration in average_trip_duration:

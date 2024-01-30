@@ -7,17 +7,14 @@ class Queries(ExtractTransformLoad):
         super().__init__(db_name, collection_name)
 
     # count total documents
-    @st.cache_data(ttl=7200)
     def count_documents(self) -> int:
         return self.default_collection.count_documents({})
 
     # count total trips
-    @st.cache_data(ttl=7200)
     def get_total_trips(self) -> int:
         return self.default_collection.count_documents({})
 
     # all data
-    @st.cache_data(ttl=7200)
     def get_data(self, page_num=1, page_size=51) -> list:
         skip = (page_num - 1) * page_size
         return (
@@ -36,12 +33,10 @@ class Queries(ExtractTransformLoad):
         )
 
     # get unique start stations
-    @st.cache_data(ttl=7200)
     def get_unique_start_stations(self):
         return self.default_collection.distinct("start station name")
 
     # Get trip data without any transformations
-    @st.cache_data(ttl=7200)
     def get_raw_trip_data(self):
         return self.default_collection.aggregate(
             [
@@ -62,7 +57,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # Get 1000 random trips
-    @st.cache_data(ttl=7200)
     def get_trip_data(self):
         return self.default_collection.aggregate(
             [
@@ -84,7 +78,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # get bike type count
-    @st.cache_data(ttl=7200)
     def bike_count(self):
         return self.default_collection.aggregate(
             [
@@ -94,7 +87,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # Average Trip Duration
-    @st.cache_data(ttl=7200)
     def get_average_trip_duration(self):
         return self.default_collection.aggregate(
             [
@@ -121,7 +113,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # Average Trip Duration by Bike ID
-    @st.cache_data(ttl=7200)
     def get_average_trip_duration_by_bike(self):
         return self.default_collection.aggregate(
             [
@@ -148,7 +139,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # Filter by User Type: Find all records where 'usertype' is 'Subscriber'.
-    @st.cache_data(ttl=7200)
     def filter_by_user_type(self):
         return self.default_collection.find(
             {"member_casual": "member"},
@@ -156,7 +146,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # Count by User Type: Count the number of records for each 'usertype'.
-    @st.cache_data(ttl=7200)
     def count_by_user_type(self):
         return self.default_collection.aggregate(
             [
@@ -166,14 +155,12 @@ class Queries(ExtractTransformLoad):
         )
 
     # Group by Start Station: Count the number of trips that started from each 'start station name'.
-    @st.cache_data(ttl=7200)
     def group_by_start_station(self):
         return self.default_collection.aggregate(
             [{"$group": {"_id": "$start_station_name", "count": {"$sum": 1}}}]
         )
 
     # Start and Stop Station Same: Find records where the start and end stations are the same.
-    @st.cache_data(ttl=7200)
     def find_same_start_end_stations(self):
         return self.default_collection.find(
             {"$expr": {"$eq": ["$start_station_name", "$end_station_name"]}},
@@ -185,7 +172,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # Month-wise Trip Count: Count the number of trips made in each month.
-    @st.cache_data(ttl=7200)
     def get_total_trips_per_month(self):
         return self.default_collection.aggregate(
             [
@@ -198,7 +184,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # Average Trip Duration by User Type
-    @st.cache_data(ttl=7200)
     def get_average_trip_duration_by_user_type(self):
         return self.default_collection.aggregate(
             [
@@ -226,7 +211,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # Most Popular Stations: Find the most popular start and end stations.
-    @st.cache_data(ttl=7200)
     def most_popular_stations(self):
         return self.default_collection.aggregate(
             [
@@ -272,7 +256,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # Get bikes used by members
-    @st.cache_data(ttl=7200)
     def get_bikes_used_by_member(self):
         return self.default_collection.aggregate(
             [
@@ -297,7 +280,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # Peak Usage Hours
-    @st.cache_data(ttl=7200)
     def get_peak_usage_hours(self):
         return self.default_collection.aggregate(
             [
@@ -309,7 +291,6 @@ class Queries(ExtractTransformLoad):
         )
 
     # Peak Usage Hours by Day of Week
-    @st.cache_data(ttl=7200)
     def get_peak_usage_hours_with_day(self):
         return self.default_collection.aggregate(
             [
