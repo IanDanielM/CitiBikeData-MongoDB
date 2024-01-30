@@ -3,7 +3,7 @@ from app.etl.extract import ExtractTransformLoad
 
 def main():
     etl = ExtractTransformLoad("citibike", "trips")
-    base_url = "https://s3.amazonaws.com/tripdata/JC-202301-citibike-tripdata.csv.zip"
+    base_url = ""
     etl.ingest_data(base_url, 2023, "app/etl/data", "trips")
 
 
