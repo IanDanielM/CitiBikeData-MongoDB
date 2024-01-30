@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 
 from app.etl.queries import Queries
 from app.visualize.custom_query import CustomQuery
@@ -21,8 +22,8 @@ st.set_page_config(
 
 
 def main():
-    queries = Queries("citibike", "trips")
-    cq_query = CustomQuery("citibike", "trips")
+    queries = Queries("citibike", "trips", uri=st.secrets["URI"])
+    cq_query = CustomQuery("citibike", "trips", uri=st.secrets["URI"])
 
     top_bar(queries)
     data_col, viz_col = st.columns(2)

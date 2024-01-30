@@ -4,13 +4,20 @@ import zipfile
 import pandas as pd
 import streamlit as st
 from pymongo import MongoClient
-
-client = MongoClient(**st.secrets["mongo"])
+from typing import Optional
 
 
 class ExtractTransformLoad:
-    def __init__(self, db_name: str, collection_name: str = None) -> None:
-        self.client = MongoClient()
+    def __init__(self, db_name: str, collection_name: str = None, host: Optional[str] = None, port: Optional[int] = None, uri: Optional[str] = None) -> None:
+        client: MongoClient
+        if uri:
+            client = MongoClient(uri)
+        elif host and port:
+            client = MongoClient(host, port)
+        else:
+            raise ValueError("Either `host` and `port` or `uri` must be provided.")
+
+        self.client = client
         self.db = self.client[db_name]
         self.default_collection = None
 

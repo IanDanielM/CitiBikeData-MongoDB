@@ -11,8 +11,8 @@ from app.etl.extract import ExtractTransformLoad
 
 
 class CustomQuery(ExtractTransformLoad):
-    def __init__(self, db_name: str, collection_name: str):
-        super().__init__(db_name, collection_name)
+    def __init__(self, db_name: str, collection_name: str, **kwargs):
+        super().__init__(db_name, collection_name, **kwargs)
 
     def sidebar_filter(self):
         st.sidebar.title("Custom Query Builder")

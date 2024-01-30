@@ -2,8 +2,8 @@ from app.etl.extract import ExtractTransformLoad
 
 
 class Queries(ExtractTransformLoad):
-    def __init__(self, db_name: str, collection_name: str):
-        super().__init__(db_name, collection_name)
+    def __init__(self, db_name: str, collection_name: str, **kwargs):
+        super().__init__(db_name, collection_name, **kwargs)
 
     # count total documents
     def count_documents(self) -> int:
