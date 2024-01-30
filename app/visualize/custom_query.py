@@ -1,12 +1,13 @@
-import streamlit as st
-from app.etl.extract import ExtractTransformLoad
+import datetime as dt
 from datetime import datetime
+
+import folium
 import pandas as pd
 import plotly.express as px
+import streamlit as st
 from streamlit_folium import folium_static
-import folium
 
-from app.visualize.helpers import haversine_vectorized
+from app.etl.extract import ExtractTransformLoad
 
 
 class CustomQuery(ExtractTransformLoad):
@@ -15,31 +16,35 @@ class CustomQuery(ExtractTransformLoad):
 
     def sidebar_filter(self):
         st.sidebar.title("Custom Query Builder")
-        default_start_date = datetime.datetime(2023, 1, 1)
-        default_end_date = datetime.datetime(2023, 1, 31)
+        default_start_date = dt.datetime(2023, 1, 1)
+        default_end_date = dt.datetime(2023, 1, 31)
         start_date = st.sidebar.date_input("Start Date", default_start_date)
         end_date = st.sidebar.date_input("End Date", default_end_date)
         start_station = st.sidebar.selectbox(
             "Start Station",
-            ["All"] + [
+            ["All"]
+            + [
                 station
                 for station in self.default_collection.distinct("start_station_name")
             ],
         )
         end_station = st.sidebar.selectbox(
             "End Station",
-            ["All"] + [
+            ["All"]
+            + [
                 station
                 for station in self.default_collection.distinct("end_station_name")
             ],
         )
         ride_type = st.sidebar.selectbox(
             "Select Ride Type",
-            ["All"] + [ride for ride in self.default_collection.distinct("rideable_type")],
+            ["All"]
+            + [ride for ride in self.default_collection.distinct("rideable_type")],
         )
         user_type = st.sidebar.selectbox(
             "Select User Type",
-            ["All"] + [user for user in self.default_collection.distinct("member_casual")],
+            ["All"]
+            + [user for user in self.default_collection.distinct("member_casual")],
         )
 
         return start_date, end_date, start_station, end_station, ride_type, user_type
@@ -133,21 +138,26 @@ class CustomQuery(ExtractTransformLoad):
                     st.plotly_chart(fig)
 
     def get_map_query(self, query):
-        map_data = self.default_collection.find(
-            query,
-            {
-                "_id": 0,
-                "start_station_name": 1,
-                "end_station_name": 1,
-                "start_lat": 1,
-                "start_lng": 1,
-                "end_lat": 1,
-                "end_lng": 1,
-                "started_at": 1,
-                "ended_at": 1,
-                "rideable_type": 1,
-                "member_casual": 1,
-            },
+        map_data = self.default_collection.aggregate(
+            [
+                {"$match": query},
+                {"$sample": {"size": 1000}},
+                {
+                    "$project": {
+                        "_id": 0,
+                        "start_station_name": 1,
+                        "end_station_name": 1,
+                        "start_lat": 1,
+                        "start_lng": 1,
+                        "end_lat": 1,
+                        "end_lng": 1,
+                        "started_at": 1,
+                        "ended_at": 1,
+                        "rideable_type": 1,
+                        "member_casual": 1,
+                    }
+                },
+            ]
         )
         map_data_list = list(map_data)
         map_data_df = pd.DataFrame(map_data_list)
@@ -156,33 +166,28 @@ class CustomQuery(ExtractTransformLoad):
 
     def map_visualize_data(self, map_data_df):
         st.caption("Map Visualization")
-        if not map_data_df.empty:
-            avg_lat = map_data_df["start_lat"].mean()
-            avg_lng = map_data_df["start_lng"].mean()
-            trip_map = folium.Map(location=[avg_lat, avg_lng], zoom_start=15)
+
+        avg_lat = map_data_df["start_lat"].mean()
+        avg_lng = map_data_df["start_lng"].mean()
+        trip_map = folium.Map(location=[avg_lat, avg_lng], zoom_start=15)
 
         # Add markers and lines to the map
-            for _, row in map_data_df.iterrows():
-                start_coords = [row["start_lat"], row["start_lng"]]
-                end_coords = [row["end_lat"], row["end_lng"]]
-
-                folium.Marker(
-                    start_coords,
-                    tooltip=row["start_station_name"],
-                    icon=folium.Icon(color="green", icon="play"),
-                    popup=f"Trip Starts at [{row['start_station_name']} ends at {row['end_station_name']}]",
-                ).add_to(trip_map)
-
-                folium.Marker(
-                    end_coords,
-                    tooltip=row["end_station_name"],
-                    icon=folium.Icon(color="red", icon="stop"),
-                    popup=f"Trip Starts at [{row['start_station_name']} ends at {row['end_station_name']}]",
-                ).add_to(trip_map)
-                folium.PolyLine(
-                    [start_coords, end_coords], color="gray", weight=1.5, opacity=1
-                ).add_to(trip_map)
-
-            folium_static(trip_map, width=1000)
-        else:
-            st.write("No data available for the selected criteria.")
+        for _, row in map_data_df.iterrows():
+            start_coords = [row["start_lat"], row["start_lng"]]
+            end_coords = [row["end_lat"], row["end_lng"]]
+            folium.Marker(
+                start_coords,
+                tooltip=row["start_station_name"],
+                icon=folium.Icon(color="green", icon="play"),
+                popup=f"Trip Starts at [{row['start_station_name']} ends at {row['end_station_name']}]",
+            ).add_to(trip_map)
+            folium.Marker(
+                end_coords,
+                tooltip=row["end_station_name"],
+                icon=folium.Icon(color="red", icon="stop"),
+                popup=f"Trip Starts at [{row['start_station_name']} ends at {row['end_station_name']}]",
+            ).add_to(trip_map)
+            folium.PolyLine(
+                [start_coords, end_coords], color="gray", weight=1.5, opacity=1
+            ).add_to(trip_map)
+        folium_static(trip_map, width=1000)

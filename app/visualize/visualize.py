@@ -1,9 +1,6 @@
-import folium
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from streamlit_folium import folium_static
 
 from app.visualize.helpers import haversine_vectorized
 
@@ -278,7 +275,20 @@ def st_total_trips_per_month(_queries, data_col_id, viz_col_id):
     total_trips_list = list(total_trips_cursor)
     total_trips_df = pd.DataFrame(total_trips_list, columns=["month", "total_trips"])
     total_trips_df["month"] = total_trips_df["month"].replace(
-        {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June", 7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"}
+        {
+            1: "January",
+            2: "February",
+            3: "March",
+            4: "April",
+            5: "May",
+            6: "June",
+            7: "July",
+            8: "August",
+            9: "September",
+            10: "October",
+            11: "November",
+            12: "December",
+        }
     )
 
     with data_col_id:

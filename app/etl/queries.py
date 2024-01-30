@@ -1,5 +1,4 @@
 from app.etl.extract import ExtractTransformLoad
-import streamlit as st
 
 
 class Queries(ExtractTransformLoad):
