@@ -9,8 +9,8 @@ from app.visualize.helpers import haversine_vectorized
 
 
 def st_user_types(queries, data_col, viz_col):
-    user_types = queries.count_by_user_type()
-    user_types_list = list(user_types)
+    user_types_cursor = queries.count_by_user_type()
+    user_types_list = list(user_types_cursor)
     user_types_df = pd.DataFrame(user_types_list, columns=["count", "usertype"])
 
     with data_col:
@@ -33,8 +33,8 @@ def st_user_types(queries, data_col, viz_col):
 
 
 def st_bike_types(queries, data_col, viz_col):
-    bike_types = queries.bike_count()
-    bike_types_list = list(bike_types)
+    bike_types_cursor = queries.bike_count()
+    bike_types_list = list(bike_types_cursor)
     bike_types_df = pd.DataFrame(bike_types_list, columns=["count", "bike type"])
 
     with data_col:
@@ -65,8 +65,8 @@ def st_bike_types(queries, data_col, viz_col):
 
 
 def st_bike_types_used_by_members(queries, data_col, viz_col):
-    bike_types = queries.get_bikes_used_by_member()
-    bike_types_list = list(bike_types)
+    bike_types_cursor = queries.get_bikes_used_by_member()
+    bike_types_list = list(bike_types_cursor)
     bike_types_df = pd.DataFrame(
         bike_types_list, columns=["count", "member_type", "bike_type"]
     )
@@ -93,8 +93,8 @@ def st_bike_types_used_by_members(queries, data_col, viz_col):
 
 
 def st_average_trip_duration_per_user_types(queries, data_col, viz_col):
-    user_average_duration = queries.get_average_trip_duration_by_user_type()
-    user_average_duration_list = list(user_average_duration)
+    user_average_duration_cursor = queries.get_average_trip_duration_by_user_type()
+    user_average_duration_list = list(user_average_duration_cursor)
     user_average_duration_df = pd.DataFrame(
         user_average_duration_list, columns=["member_type", "average_duration"]
     )
