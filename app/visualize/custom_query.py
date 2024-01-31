@@ -11,10 +11,17 @@ from app.etl.extract import ExtractTransformLoad
 
 
 class CustomQuery(ExtractTransformLoad):
-    def __init__(self, db_name: str, collection_name: str, **kwargs):
+    def __init__(self, db_name: str, collection_name: str, **kwargs) -> None:
         super().__init__(db_name, collection_name, **kwargs)
 
     def sidebar_filter(self):
+        """
+        Displays a sidebar with filter options for custom query building.
+
+        Returns:
+            tuple: A tuple containing the selected start date, end date,
+            start station, end station, ride type, and user type.
+        """
         st.sidebar.title("Custom Query Builder")
         default_start_date = dt.datetime(2023, 1, 1)
         default_end_date = dt.datetime(2023, 1, 31)
@@ -22,34 +29,36 @@ class CustomQuery(ExtractTransformLoad):
         end_date = st.sidebar.date_input("End Date", default_end_date)
         start_station = st.sidebar.selectbox(
             "Start Station",
-            ["All"]
-            + [
+            ["All"] + [
                 station
                 for station in self.default_collection.distinct("start_station_name")
             ],
         )
         end_station = st.sidebar.selectbox(
             "End Station",
-            ["All"]
-            + [
+            ["All"] + [
                 station
                 for station in self.default_collection.distinct("end_station_name")
             ],
         )
         ride_type = st.sidebar.selectbox(
             "Select Ride Type",
-            ["All"]
-            + [ride for ride in self.default_collection.distinct("rideable_type")],
+            ["All"] + [ride for ride in self.default_collection.distinct("rideable_type")],
         )
         user_type = st.sidebar.selectbox(
             "Select User Type",
-            ["All"]
-            + [user for user in self.default_collection.distinct("member_casual")],
+            ["All"] + [user for user in self.default_collection.distinct("member_casual")],
         )
 
         return start_date, end_date, start_station, end_station, ride_type, user_type
 
-    def custom_query(self):
+    def custom_query(self) -> dict:
+        """
+        Constructs a query based on the provided filter parameters.
+
+        Returns:
+            A dictionary representing the MongoDB query.
+        """
         (
             start_date,
             end_date,
@@ -76,8 +85,17 @@ class CustomQuery(ExtractTransformLoad):
 
         return query
 
-    def get_custom_query(_self, query):
-        custom_data = _self.default_collection.find(
+    def get_custom_query(self, query: dict) -> pd.DataFrame:
+        """
+        Retrieves custom data from the default collection based on the provided query.
+
+        Args:
+            query (dict): The query to filter the data.
+
+        Returns:
+            pd.DataFrame: A pandas DataFrame containing the retrieved custom data.
+        """
+        custom_data = self.default_collection.find(
             query,
             {
                 "_id": 0,
@@ -94,7 +112,21 @@ class CustomQuery(ExtractTransformLoad):
 
         return custom_data_df
 
-    def custom_visualize_data(self, custom_data_df, data_col, viz_col):
+    def custom_visualize_data(self, custom_data_df: pd.DataFrame, data_col, viz_col) -> None:
+        """
+        Visualizes custom data using various plots based on the columns present in the DataFrame.
+
+        Args:
+            custom_data_df (pd.DataFrame): The DataFrame containing the custom data to be visualized.
+            data_col: The column where the data will be displayed.
+            viz_col: The column where the visualizations will be displayed.
+
+        Returns:
+            None
+        """
+        if custom_data_df.empty:
+            st.error("No data to be Visualized")
+            return
         with data_col:
             st.caption("Custom Query Results")
             st.dataframe(custom_data_df, hide_index=True, use_container_width=True)
@@ -137,7 +169,16 @@ class CustomQuery(ExtractTransformLoad):
                     )
                     st.plotly_chart(fig)
 
-    def get_map_query(self, query):
+    def get_map_query(self, query: dict) -> pd.DataFrame:
+        """
+        Retrieves map data based on the provided query.
+
+        Args:
+            query (dict): The query to filter the map data.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the map data.
+        """
         map_data = self.default_collection.aggregate(
             [
                 {"$match": query},
@@ -164,30 +205,54 @@ class CustomQuery(ExtractTransformLoad):
 
         return map_data_df
 
-    def map_visualize_data(self, map_data_df):
-        st.caption("Map Visualization")
+    def map_visualize_data(self, map_data_df: pd.DataFrame) -> None:
+        """
+        Visualizes trip data on a map.
 
-        avg_lat = map_data_df["start_lat"].mean()
-        avg_lng = map_data_df["start_lng"].mean()
-        trip_map = folium.Map(location=[avg_lat, avg_lng], zoom_start=15)
+        Args:
+            map_data_df (pd.DataFrame): DataFrame containing trip data.
 
-        # Add markers and lines to the map
-        for _, row in map_data_df.iterrows():
-            start_coords = [row["start_lat"], row["start_lng"]]
-            end_coords = [row["end_lat"], row["end_lng"]]
-            folium.Marker(
-                start_coords,
-                tooltip=row["start_station_name"],
-                icon=folium.Icon(color="green", icon="play"),
-                popup=f"Trip Starts at [{row['start_station_name']} ends at {row['end_station_name']}]",
-            ).add_to(trip_map)
-            folium.Marker(
-                end_coords,
-                tooltip=row["end_station_name"],
-                icon=folium.Icon(color="red", icon="stop"),
-                popup=f"Trip Starts at [{row['start_station_name']} ends at {row['end_station_name']}]",
-            ).add_to(trip_map)
-            folium.PolyLine(
-                [start_coords, end_coords], color="gray", weight=1.5, opacity=1
-            ).add_to(trip_map)
-        folium_static(trip_map, width=1000)
+        Returns:
+            None
+        """
+        try:
+            st.caption("Map Visualization")
+
+            if map_data_df.empty:
+                st.write("No trips found for the selected filters.")
+                return
+
+            try:
+                avg_lat = map_data_df["start_lat"].mean()
+                avg_lng = map_data_df["start_lng"].mean()
+            except (KeyError, TypeError, ValueError):
+                st.error("An error occurred while visualizing the map.")
+                return
+            trip_map = folium.Map(location=[avg_lat, avg_lng], zoom_start=15)
+
+            # Prepare data for markers and lines
+            start_coords = map_data_df[["start_lat", "start_lng"]].values.tolist()
+            end_coords = map_data_df[["end_lat", "end_lng"]].values.tolist()
+            start_station_names = map_data_df["start_station_name"].values.tolist()
+            end_station_names = map_data_df["end_station_name"].values.tolist()
+
+            # Add markers and lines to the map
+            for start, end, start_name, end_name in zip(start_coords, end_coords, start_station_names, end_station_names):
+                folium.Marker(
+                    start,
+                    tooltip=start_name,
+                    icon=folium.Icon(color="green", icon="play"),
+                    popup=f"Trip Starts at [{start_name} ends at {end_name}]",
+                ).add_to(trip_map)
+                folium.Marker(
+                    end,
+                    tooltip=end_name,
+                    icon=folium.Icon(color="red", icon="stop"),
+                    popup=f"Trip Starts at [{start_name} ends at {end_name}]",
+                ).add_to(trip_map)
+                folium.PolyLine(
+                    [start, end], color="gray", weight=1.5, opacity=1
+                ).add_to(trip_map)
+            folium_static(trip_map, width=1000)
+        except Exception as error:
+            st.error("An error occurred while visualizing the map.", error)

@@ -1,4 +1,5 @@
 from app.etl.extract import ExtractTransformLoad
+from pymongo.cursor import Cursor
 
 
 class Queries(ExtractTransformLoad):
@@ -13,30 +14,12 @@ class Queries(ExtractTransformLoad):
     def get_total_trips(self) -> int:
         return self.default_collection.count_documents({})
 
-    # all data
-    def get_data(self, page_num=1, page_size=51) -> list:
-        skip = (page_num - 1) * page_size
-        return (
-            self.default_collection.find(
-                {},
-                {
-                    "_id": 0,
-                    "start_station_name": 1,
-                    "end_station_name": 1,
-                    "rideable_type": 1,
-                    "member_casual": 1,
-                },
-            )
-            .skip(skip)
-            .limit(page_size)
-        )
-
     # get unique start stations
-    def get_unique_start_stations(self):
+    def get_unique_start_stations(self) -> list[str]:
         return self.default_collection.distinct("start station name")
 
     # Get trip data without any transformations
-    def get_raw_trip_data(self):
+    def get_raw_trip_data(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {
@@ -56,7 +39,7 @@ class Queries(ExtractTransformLoad):
         )
 
     # Get 1000 random trips
-    def get_trip_data(self):
+    def get_trip_data(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {"$sample": {"size": 1000}},
@@ -77,7 +60,7 @@ class Queries(ExtractTransformLoad):
         )
 
     # get bike type count
-    def bike_count(self):
+    def bike_count(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {"$group": {"_id": "$rideable_type", "count": {"$sum": 1}}},
@@ -86,7 +69,7 @@ class Queries(ExtractTransformLoad):
         )
 
     # Average Trip Duration
-    def get_average_trip_duration(self):
+    def get_average_trip_duration(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {
@@ -112,7 +95,7 @@ class Queries(ExtractTransformLoad):
         )
 
     # Average Trip Duration by Bike ID
-    def get_average_trip_duration_by_bike(self):
+    def get_average_trip_duration_by_bike(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {
@@ -138,14 +121,14 @@ class Queries(ExtractTransformLoad):
         )
 
     # Filter by User Type: Find all records where 'usertype' is 'Subscriber'.
-    def filter_by_user_type(self):
+    def filter_by_user_type(self) -> Cursor:
         return self.default_collection.find(
             {"member_casual": "member"},
             {"member_casual": 1, "rideable_type": 1, "_id": 0},
         )
 
     # Count by User Type: Count the number of records for each 'usertype'.
-    def count_by_user_type(self):
+    def count_by_user_type(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {"$group": {"_id": "$member_casual", "count": {"$sum": 1}}},
@@ -154,13 +137,13 @@ class Queries(ExtractTransformLoad):
         )
 
     # Group by Start Station: Count the number of trips that started from each 'start station name'.
-    def group_by_start_station(self):
+    def group_by_start_station(self) -> Cursor:
         return self.default_collection.aggregate(
             [{"$group": {"_id": "$start_station_name", "count": {"$sum": 1}}}]
         )
 
     # Start and Stop Station Same: Find records where the start and end stations are the same.
-    def find_same_start_end_stations(self):
+    def find_same_start_end_stations(self) -> Cursor:
         return self.default_collection.find(
             {"$expr": {"$eq": ["$start_station_name", "$end_station_name"]}},
             {
@@ -171,7 +154,7 @@ class Queries(ExtractTransformLoad):
         )
 
     # Month-wise Trip Count: Count the number of trips made in each month.
-    def get_total_trips_per_month(self):
+    def get_total_trips_per_month(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {"$addFields": {"converted_starttime": {"$toDate": "$started_at"}}},
@@ -183,7 +166,7 @@ class Queries(ExtractTransformLoad):
         )
 
     # Average Trip Duration by User Type
-    def get_average_trip_duration_by_user_type(self):
+    def get_average_trip_duration_by_user_type(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {
@@ -210,7 +193,7 @@ class Queries(ExtractTransformLoad):
         )
 
     # Most Popular Stations: Find the most popular start and end stations.
-    def most_popular_stations(self):
+    def most_popular_stations(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {
@@ -255,7 +238,7 @@ class Queries(ExtractTransformLoad):
         )
 
     # Get bikes used by members
-    def get_bikes_used_by_member(self):
+    def get_bikes_used_by_member(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {"$match": {"member_casual": "member"}},
@@ -279,7 +262,7 @@ class Queries(ExtractTransformLoad):
         )
 
     # Peak Usage Hours
-    def get_peak_usage_hours(self):
+    def get_peak_usage_hours(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {"$addFields": {"hour": {"$hour": {"$toDate": "$started_at"}}}},
@@ -290,7 +273,7 @@ class Queries(ExtractTransformLoad):
         )
 
     # Peak Usage Hours by Day of Week
-    def get_peak_usage_hours_with_day(self):
+    def get_peak_usage_hours_with_day(self) -> Cursor:
         return self.default_collection.aggregate(
             [
                 {

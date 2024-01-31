@@ -34,6 +34,14 @@ class ExtractTransformLoad:
 
     @staticmethod
     def generate_monthly_urls(base_url: str, year: int) -> list:
+        """
+        Generate a list of monthly URLs based on the base URL and year.
+        Args:
+            base_url (str): The base URL to be used for generating the monthly URLs.
+            year (int): The year for which the monthly URLs are to be generated.
+        Returns:
+            list: A list of monthly URLs.
+        """
         urls = []
         for month in range(1, 13):
             month_str = f"{year}{month:02d}"
@@ -42,6 +50,14 @@ class ExtractTransformLoad:
         return urls
 
     def extract_data(self, url: str, path: str) -> list:
+        """
+        Extracts data from a given URL and saves it to the specified path.
+        Args:
+            url (str): The URL of the data to be extracted.
+            path (str): The path where the extracted data will be saved.
+        Returns:
+            str: The path of the extracted file if successful, None otherwise.
+        """
         zip_name = os.path.join(path, url.split("/")[-1])
         os.system(f"wget {url} -O {zip_name}")
         with zipfile.ZipFile(zip_name, "r") as zip_ref:
@@ -52,6 +68,19 @@ class ExtractTransformLoad:
         return None
 
     def process_data(self, csv_path: str, collection_name: str) -> list:
+        """
+        Transforms data from a CSV file
+
+        Args:
+            csv_path (str): The path to the CSV file.
+            collection_name (str): The name of the MongoDB collection.
+
+        Returns:
+            list: The processed data as a list of dictionaries.
+
+        Raises:
+            Exception: If an error occurs while processing the data.
+        """
         try:
             if csv_path:
                 df = pd.read_csv(csv_path)
@@ -68,6 +97,16 @@ class ExtractTransformLoad:
             print(f"Error occurred while processing data: {e}")
 
     def load_data(self, collection_name: str, data: list) -> None:
+        """
+        Loads the given data into database.
+
+        Args:
+            collection_name (str): The name of the collection to load the data into.
+            data (list): The list of data to be inserted into the collection.
+
+        Returns:
+            None
+        """
         try:
             collection = self.get_collection(collection_name)
             collection.insert_many(data)
@@ -77,6 +116,15 @@ class ExtractTransformLoad:
     def ingest_data(
         self, base_url: str, year: int, path: str, collection_name: str
     ) -> None:
+        """
+        Perfoms the ETL process.
+
+        Args:
+            base_url (str): The base URL for the data.
+            year (int): The year for which the data is to be ingested.
+            path (str): The path where the downloaded zip files are stored.
+            collection_name (str): The name of the collection in which the processed data will be stored.
+        """
         urls = self.generate_monthly_urls(base_url, year)
         for url in urls:
             csv_path = self.extract_data(url, path)
