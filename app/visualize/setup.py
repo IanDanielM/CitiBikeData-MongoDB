@@ -21,7 +21,7 @@ def top_bar(queries: Queries) -> None:
         Welcome to Streamlit Citibike Data Visualization, a tool designed
         to explore and analyze the extensive data from New York City's
         bike-sharing program.
-        Explore information covering various aspects, from usage patterns to popular routes.
+        Explore information covering various aspects, from usage patterns to popular stations.
         The app allows you to execute predefined queries or craft your own using the fields in the sidebar.
         Featuring intuitive maps and dynamic charts
             """
