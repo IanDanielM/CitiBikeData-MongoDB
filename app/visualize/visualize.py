@@ -22,20 +22,22 @@ def st_user_types(queries: Queries, data_col, viz_col):
         user_types_cursor = queries.count_by_user_type()
         user_types_list = list(user_types_cursor)
         user_types_df = pd.DataFrame(user_types_list, columns=["count", "usertype"])
+        user_types_df = user_types_df.sort_values(by="count", ascending=False)
+        user_types_df = user_types_df.rename({"usertype": "User Type", "count": "Trip Count"}, axis=1)
 
         with data_col:
             # Data for user types
             st.caption("User Types Data")
-            st.dataframe(user_types_df, use_container_width=True, hide_index=True)
+            st.dataframe(user_types_df, use_container_width=True, hide_index=True, column_order=["User Type", "Trip Count"])
 
         with viz_col:
             # Plot for user types
             fig = px.pie(
                 user_types_df,
-                values="count",
-                names="usertype",
+                values="Trip Count",
+                names="User Type",
                 title="User Types Visualization",
-                color="usertype",
+                color="User Type",
                 color_discrete_map={"customer": "#FFA500", "member": "#0000FF"},
             )
             fig.update_traces(textposition="inside", textinfo="percent+label")
@@ -61,6 +63,8 @@ def st_bike_types(queries: Queries, data_col, viz_col) -> None:
         bike_types_cursor = queries.bike_count()
         bike_types_list = list(bike_types_cursor)
         bike_types_df = pd.DataFrame(bike_types_list, columns=["count", "bike type"])
+        bike_types_df = bike_types_df.sort_values(by="count", ascending=False)
+        bike_types_df = bike_types_df.rename({"bike type": "Bike Type", "count": "Trip Count"}, axis=1)
 
         with data_col:
             # Data for bike types
@@ -69,16 +73,16 @@ def st_bike_types(queries: Queries, data_col, viz_col) -> None:
                 bike_types_df,
                 use_container_width=True,
                 hide_index=True,
-                column_order=["bike type", "count"],
+                column_order=["Bike Type", "Trip Count"],
             )
         with viz_col:
             # Plot for bike types
             fig = px.pie(
                 bike_types_df,
-                values="count",
-                names="bike type",
+                values="Trip Count",
+                names="Bike Type",
                 title="Bike Types Visualization",
-                color="bike type",
+                color="Bike Type",
                 color_discrete_map={
                     "electric_bike": "#006400",
                     "docked_bike": "#00FFFF",
@@ -107,6 +111,10 @@ def st_bike_types_used_by_members(queries: Queries, data_col, viz_col) -> None:
         bike_types_df = pd.DataFrame(
             bike_types_list, columns=["count", "member_type", "bike_type"]
         )
+        bike_types_df = bike_types_df.sort_values(by="count", ascending=False)
+        bike_types_df = bike_types_df.rename({"bike_type": "Bike Type",
+                                              "count": "Trip Count",
+                                              "member_type": "User Type"}, axis=1)
         with data_col:
             # Data for bike types used by members
             st.caption("Bike Types Used By Members Data")
@@ -114,15 +122,15 @@ def st_bike_types_used_by_members(queries: Queries, data_col, viz_col) -> None:
                 bike_types_df,
                 use_container_width=True,
                 hide_index=True,
-                column_order=["member_type", "bike_type", "count"],
+                column_order=["User Type", "Bike Type", "Trip Count"],
             )
         with viz_col:
             # Plot for bike types used by members
             fig = px.bar(
                 bike_types_df,
-                x="bike_type",
-                y="count",
-                color="bike_type",
+                x="Bike Type",
+                y="Trip Count",
+                color="Bike Type",
                 labels={"count": "Number of Rides", "bike_type": "Bike Type"},
                 title="Number of Rides per Bike Type for Members",
             )
@@ -199,10 +207,14 @@ def st_popular_stations(queries: Queries, data_col, viz_col) -> None:
             popular_stations_data["popular_start_stations"],
             columns=["count", "start station name"],
         )
+        popular_start_df = popular_start_df.sort_values(by="count", ascending=False)
+        popular_start_df = popular_start_df.rename({"start station name": "Station Name", "count": "Trip Count"}, axis=1)
         popular_end_df = pd.DataFrame(
             popular_stations_data["popular_end_stations"],
             columns=["count", "end station name"],
         )
+        popular_end_df = popular_end_df.sort_values(by="count", ascending=False)
+        popular_end_df = popular_end_df.rename({"end station name": "Station Name", "count": "Trip Count"}, axis=1)
 
         with data_col:
             # Data for popular stations
@@ -211,7 +223,7 @@ def st_popular_stations(queries: Queries, data_col, viz_col) -> None:
                 popular_start_df,
                 hide_index=True,
                 use_container_width=True,
-                column_order=["start station name", "count"],
+                column_order=["Station Name", "Trip Count"],
             )
 
             st.caption("Popular End Stations")
@@ -219,15 +231,15 @@ def st_popular_stations(queries: Queries, data_col, viz_col) -> None:
                 popular_end_df,
                 hide_index=True,
                 use_container_width=True,
-                column_order=["end station name", "count"],
+                column_order=["Station Name", "Trip Count"],
             )
 
         with viz_col:
             # Plot for popular start stations
             fig_start = px.bar(
                 popular_start_df,
-                x="start station name",
-                y="count",
+                x="Station Name",
+                y="Trip Count",
                 title="Most Popular Start Stations",
                 labels={"count": "Ride Count", "start station name": "Station Name"},
             )
@@ -236,8 +248,8 @@ def st_popular_stations(queries: Queries, data_col, viz_col) -> None:
             # Plot for popular end stations
             fig_end = px.bar(
                 popular_end_df,
-                x="end station name",
-                y="count",
+                x="Station Name",
+                y="Trip Count",
                 title="Most Popular End Stations",
                 labels={"count": "Ride Count", "end station name": "Station Name"},
             )
@@ -252,7 +264,7 @@ def st_peak_hours(queries, data_col, viz_col) -> None:
     peak_hours_list = list(peak_hours_cursor)
     peak_hours_df = pd.DataFrame(peak_hours_list, columns=["hour", "count"])
     peak_hours_df = peak_hours_df.sort_values(by="hour")
-    peak_hours_df.rename(columns={"count": "trip_count"}, inplace=True)
+    peak_hours_df.rename(columns={"count": "Trip Count"}, inplace=True)
 
     with data_col:
         # Data for peak hours
@@ -261,7 +273,7 @@ def st_peak_hours(queries, data_col, viz_col) -> None:
             peak_hours_df,
             hide_index=True,
             use_container_width=True,
-            column_order=["hour", "trip_count"],
+            column_order=["hour", "Trip Count"],
         )
 
     with viz_col:
@@ -269,7 +281,7 @@ def st_peak_hours(queries, data_col, viz_col) -> None:
         fig = px.line(
             peak_hours_df,
             x="hour",
-            y="trip_count",
+            y="Trip Count",
             title="Peak Hours Visualization",
             labels={"hour": "Hour", "trip_count": "Trip Count"},
         )
@@ -323,7 +335,7 @@ def st_peak_hours_with_day(queries: Queries, data_col, viz_col) -> None:
         peak_hours_df = peak_hours_df.sort_values(
             by=["day", "hour"], ascending=[True, True]
         )
-        peak_hours_df.rename(columns={"count": "trip_count"}, inplace=True)
+        peak_hours_df.rename(columns={"count": "Trip Count"}, inplace=True)
 
         with data_col:
             # Data for peak hours with day
@@ -332,7 +344,7 @@ def st_peak_hours_with_day(queries: Queries, data_col, viz_col) -> None:
                 peak_hours_df,
                 hide_index=True,
                 use_container_width=True,
-                column_order=["hour_group", "day", "trip_count"],
+                column_order=["hour_group", "day", "Trip Count"],
             )
 
         with viz_col:
@@ -344,8 +356,8 @@ def st_peak_hours_with_day(queries: Queries, data_col, viz_col) -> None:
                 peak_hours_df,
                 x="hour",
                 y="day",
-                z="trip_count",
-                labels={"hour": "Hour", "trip_count": "Trip Count", "day": "Day"},
+                z="Trip Count",
+                labels={"hour": "Hour", "Trip Count": "Trip Count", "day": "Day"},
                 title="Peak Hours With Day Heatmap",
                 color_continuous_scale="Viridis",
             )
