@@ -1,8 +1,10 @@
 import streamlit as st
 
+from app.etl.queries import Queries
+
 
 # Streamlit Layout
-def top_bar(queries: object) -> None:
+def top_bar(queries: Queries) -> None:
     """
     Display the top bar section of the Streamlit Citibike Data Visualization app.
 
@@ -16,10 +18,10 @@ def top_bar(queries: object) -> None:
         st.title(":bike: CitiBike 2023 Data Analysis And Visualization")
         st.markdown(
             """
-        Welcome to Streamlit Citibike Data Visualization, an interactive tool designed
-        to explore and analyze the extensive data from New York City's popular
+        Welcome to Streamlit Citibike Data Visualization, a tool designed
+        to explore and analyze the extensive data from New York City's
         bike-sharing program.
-        Dive into information covering various aspects, from usage patterns to popular routes.
+        Explore information covering various aspects, from usage patterns to popular routes.
         The app allows you to execute predefined queries or craft your own using the fields in the sidebar.
         Featuring intuitive maps and dynamic charts
             """

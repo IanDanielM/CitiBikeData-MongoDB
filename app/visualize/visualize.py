@@ -3,14 +3,15 @@ import plotly.express as px
 import streamlit as st
 
 from app.visualize.helpers import haversine_vectorized
+from app.etl.queries import Queries
 
 
-def st_user_types(queries: object, data_col, viz_col):
+def st_user_types(queries: Queries, data_col, viz_col):
     """
     Visualizes user types data and plots a pie chart.
 
     Args:
-        queries (object): Object containing methods to query user types data.
+        queries (Queries): Queries containing methods to query user types data.
         data_col: Streamlit column to display the user types data.
         viz_col: Streamlit column to display the pie chart visualization.
 
@@ -44,7 +45,7 @@ def st_user_types(queries: object, data_col, viz_col):
         return
 
 
-def st_bike_types(queries: object, data_col, viz_col) -> None:
+def st_bike_types(queries: Queries, data_col, viz_col) -> None:
     """
     Visualizes bike types data and plots a pie chart.
 
@@ -91,12 +92,12 @@ def st_bike_types(queries: object, data_col, viz_col) -> None:
         return
 
 
-def st_bike_types_used_by_members(queries: object, data_col, viz_col) -> None:
+def st_bike_types_used_by_members(queries: Queries, data_col, viz_col) -> None:
     """
     Visualizes the bike types used by members.
 
     Args:
-        queries (object): An object containing query methods.
+        queries (Queries): An object containing query methods.
         data_col: The column to display the data in.
         viz_col: The column to display the visualization in.
     """
@@ -131,12 +132,12 @@ def st_bike_types_used_by_members(queries: object, data_col, viz_col) -> None:
         return
 
 
-def st_average_trip_duration_per_user_types(queries: object, data_col, viz_col) -> None:
+def st_average_trip_duration_per_user_types(queries: Queries, data_col, viz_col) -> None:
     """
     Visualizes the average trip duration per user types.
 
     Args:
-        queries (object): An object containing query methods.
+        queries (Queries): An object containing query methods.
         data_col: The column to display the data in.
         viz_col: The column to display the visualization in.
     """
@@ -178,7 +179,7 @@ def st_average_trip_duration_per_user_types(queries: object, data_col, viz_col) 
         return
 
 
-def st_popular_stations(queries: object, data_col, viz_col) -> None:
+def st_popular_stations(queries: Queries, data_col, viz_col) -> None:
     """
     Visualizes the most popular start and end stations using Streamlit.
 
@@ -275,7 +276,7 @@ def st_peak_hours(queries, data_col, viz_col) -> None:
         st.plotly_chart(fig, use_container_width=True)
 
 
-def st_peak_hours_with_day(queries: object, data_col, viz_col) -> None:
+def st_peak_hours_with_day(queries: Queries, data_col, viz_col) -> None:
     """
     Visualizes peak usage hours with day.
 
@@ -412,12 +413,12 @@ def st_total_trips_per_month(queries, data_col_id, viz_col_id) -> None:
         return
 
 
-def st_average_speed_per_user_and_bike_type(queries: object, data_col, viz_col) -> None:
+def st_average_speed_per_user_and_bike_type(queries: Queries, data_col, viz_col) -> None:
     """
     Calculate and visualize the average speed per user type and bike type.
 
     Args:
-        queries (object): Object containing query methods.
+        queries (Queries): Object containing query methods.
         data_col: Streamlit column for displaying data.
         viz_col: Streamlit column for displaying visualizations.
     """
