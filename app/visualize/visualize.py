@@ -4,6 +4,7 @@ import streamlit as st
 
 from app.visualize.helpers import haversine_vectorized
 from app.etl.queries import Queries
+from app.visualize.chat import analysis_overview
 
 
 def st_user_types(queries: Queries, data_col, viz_col):
@@ -29,6 +30,7 @@ def st_user_types(queries: Queries, data_col, viz_col):
             # Data for user types
             st.caption("User Types Data")
             st.dataframe(user_types_df, use_container_width=True, hide_index=True, column_order=["User Type", "Trip Count"])
+            analysis_overview("User Types", user_types_df)
 
         with viz_col:
             # Plot for user types
@@ -75,6 +77,8 @@ def st_bike_types(queries: Queries, data_col, viz_col) -> None:
                 hide_index=True,
                 column_order=["Bike Type", "Trip Count"],
             )
+            analysis_overview("Bike Types", bike_types_df)
+
         with viz_col:
             # Plot for bike types
             fig = px.pie(
@@ -124,6 +128,8 @@ def st_bike_types_used_by_members(queries: Queries, data_col, viz_col) -> None:
                 hide_index=True,
                 column_order=["User Type", "Bike Type", "Trip Count"],
             )
+            analysis_overview("Bikes Used By Members", bike_types_df)
+
         with viz_col:
             # Plot for bike types used by members
             fig = px.bar(
@@ -168,6 +174,8 @@ def st_average_trip_duration_per_user_types(queries: Queries, data_col, viz_col)
                 hide_index=True,
                 column_order=["member_type", "average_duration"],
             )
+            analysis_overview("Average trip duration per user types", user_average_duration_df)
+
         with viz_col:
             # Plot for average trip duration per user types
             fig = px.bar(
@@ -233,6 +241,7 @@ def st_popular_stations(queries: Queries, data_col, viz_col) -> None:
                 use_container_width=True,
                 column_order=["Station Name", "Trip Count"],
             )
+            analysis_overview("Popular Start and End Stations", (popular_start_df, popular_end_df))
 
         with viz_col:
             # Plot for popular start stations
@@ -275,6 +284,7 @@ def st_peak_hours(queries, data_col, viz_col) -> None:
             use_container_width=True,
             column_order=["hour", "Trip Count"],
         )
+        analysis_overview("Peak Hours", peak_hours_df)
 
     with viz_col:
         # Plot for peak hours
@@ -346,6 +356,7 @@ def st_peak_hours_with_day(queries: Queries, data_col, viz_col) -> None:
                 use_container_width=True,
                 column_order=["hour_group", "day", "Trip Count"],
             )
+            analysis_overview("Peak Hours With Day", peak_hours_df)
 
         with viz_col:
             # Plot for peak hours with day
@@ -409,6 +420,7 @@ def st_total_trips_per_month(queries, data_col_id, viz_col_id) -> None:
                 use_container_width=True,
                 column_order=["month", "total_trips"],
             )
+            analysis_overview("Total Trips Per Month", total_trips_df)
 
         with viz_col_id:
             # Plot for total trips per month
@@ -461,6 +473,7 @@ def st_average_speed_per_user_and_bike_type(queries: Queries, data_col, viz_col)
             "speed"
         ].mean()
         average_speed_per_user_type = average_speed_per_user_type.reset_index()
+        average_speed_per_user_type = average_speed_per_user_type.sort_values(by="speed", ascending=False)
         average_speed_per_user_type["speed"] = average_speed_per_user_type["speed"].round(2)
         average_speed_per_user_type.rename(
             columns={"member_casual": "Member Type", "speed": "Average Speed (km/h)"},
@@ -472,6 +485,7 @@ def st_average_speed_per_user_and_bike_type(queries: Queries, data_col, viz_col)
             "speed"
         ].mean()
         average_speed_per_bike_type = average_speed_per_bike_type.reset_index()
+        average_speed_per_bike_type = average_speed_per_bike_type.sort_values(by="speed", ascending=False)
         average_speed_per_bike_type["speed"] = average_speed_per_bike_type["speed"].round(2)
         average_speed_per_bike_type.rename(
             columns={"rideable_type": "Bike Type", "speed": "Average Speed (km/h)"},
@@ -494,6 +508,8 @@ def st_average_speed_per_user_and_bike_type(queries: Queries, data_col, viz_col)
                 use_container_width=True,
                 column_order=["Bike Type", "Average Speed (km/h)"],
             )
+            analysis_overview("Average Speed Per User Type and Bike Type",
+                              (average_speed_per_user_type, average_speed_per_bike_type))
 
         with viz_col:
             # Plot for average speed per user type

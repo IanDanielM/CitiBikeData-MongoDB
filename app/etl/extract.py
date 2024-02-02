@@ -34,14 +34,6 @@ class ExtractTransformLoad:
 
     @staticmethod
     def generate_monthly_urls(base_url: str, year: int) -> list:
-        """
-        Generate a list of monthly URLs based on the base URL and year.
-        Args:
-            base_url (str): The base URL to be used for generating the monthly URLs.
-            year (int): The year for which the monthly URLs are to be generated.
-        Returns:
-            list: A list of monthly URLs.
-        """
         urls = []
         for month in range(1, 13):
             month_str = f"{year}{month:02d}"
