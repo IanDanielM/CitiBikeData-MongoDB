@@ -20,20 +20,23 @@ def st_user_types(queries: Queries, data_col, viz_col):
         None
     """
     try:
-        user_types_cursor = queries.count_by_user_type()
-        user_types_list = list(user_types_cursor)
-        user_types_df = pd.DataFrame(user_types_list, columns=["count", "usertype"])
-        user_types_df = user_types_df.sort_values(by="count", ascending=False)
-        user_types_df = user_types_df.rename({"usertype": "User Type", "count": "Trip Count"}, axis=1)
-        if 'analysis_performed' not in st.session_state:
-            st.session_state['analysis_performed'] = False
+        if 'user_types_df' not in st.session_state:
+            with st.spinner('Fetching data...'):
+                user_types_cursor = queries.count_by_user_type()
+                user_types_list = list(user_types_cursor)
+            user_types_df = pd.DataFrame(user_types_list, columns=["count", "usertype"])
+            user_types_df = user_types_df.sort_values(by="count", ascending=False)
+            user_types_df = user_types_df.rename({"usertype": "User Type", "count": "Trip Count"}, axis=1)
+            st.session_state['user_types_df'] = user_types_df
+        else:
+            user_types_df = st.session_state['user_types_df']
+
         with data_col:
             # Data for user types
             st.caption("User Types Data")
             st.dataframe(user_types_df, use_container_width=True, hide_index=True, column_order=["User Type", "Trip Count"])
             if st.button('Perform Analysis Overview'):
                 analysis_overview("User Types", user_types_df)
-                st.session_state.analysis_performed = True
 
         with viz_col:
             # Plot for user types
