@@ -30,7 +30,7 @@ def st_user_types(queries: Queries, data_col, viz_col):
             # Data for user types
             st.caption("User Types Data")
             st.dataframe(user_types_df, use_container_width=True, hide_index=True, column_order=["User Type", "Trip Count"])
-            if st.button("Perform Analysi Overview"):
+            if st.button("Perform Analysis Overview"):
                 analysis_overview("User Types", user_types_df)
 
         with viz_col:
