@@ -54,7 +54,6 @@ def st_user_types(queries: Queries, data_col, viz_col):
         st.error(f"An error occurred: {str(e)}")
         return
 
-
 def st_bike_types(queries: Queries, data_col, viz_col) -> None:
     """
     Visualizes bike types data and plots a pie chart.
