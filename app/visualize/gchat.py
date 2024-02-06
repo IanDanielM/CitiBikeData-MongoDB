@@ -7,7 +7,7 @@ import streamlit as st
 def get_response(message: str):
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     generation_config = {
-        "temperature": 0.9,
+        "temperature": 0.5,
         "top_p": 1,
         "top_k": 1,
         "max_output_tokens": 2048,
@@ -53,8 +53,11 @@ def analysis_overview(data_type: str, dataframe: pd.DataFrame):
             text_container = st.empty()
             full_text = ""
             for message in response_generator:
-                full_text += message.text
-                text_container.write(full_text)
+                try:
+                    full_text += message.text
+                    text_container.write(full_text)
+                except ValueError:
+                    text_container.write(message.text)
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
         return
