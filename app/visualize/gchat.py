@@ -7,7 +7,7 @@ import streamlit as st
 def get_response(message: str):
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     generation_config = {
-        "temperature": 0.5,
+        "temperature": 0.8,
         "top_p": 1,
         "top_k": 1,
         "max_output_tokens": 4048,
