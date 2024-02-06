@@ -10,7 +10,7 @@ def get_response(message: str):
         "temperature": 0.5,
         "top_p": 1,
         "top_k": 1,
-        "max_output_tokens": 2048,
+        "max_output_tokens": 4048,
     }
 
     safety_settings = [
