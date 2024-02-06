@@ -8,7 +8,14 @@ from typing import Optional
 
 
 class ExtractTransformLoad:
-    def __init__(self, db_name: str, collection_name: str = None, host: Optional[str] = None, port: Optional[int] = None, uri: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        db_name: str,
+        collection_name: str = None,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        uri: Optional[str] = None,
+    ) -> None:
         client: MongoClient
         if uri:
             client = MongoClient(uri)

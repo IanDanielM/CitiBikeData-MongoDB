@@ -2,18 +2,7 @@ import pandas as pd
 import streamlit as st
 from openai import OpenAI
 
-client = OpenAI(api_key=st.secrets["API_KEY"])
 
-system_prompt = """
-Given the following data on Citibike Data, provide an analysis
-that includes a numerical breakdown, percentage distribution,
-and insights into what this data might suggest the trend on the data provided
-"""
-
-user_prompt = """Please analyze the DataFrame provided on our {} and give a comprehensive overview: {}"""
-
-
-# create a function that takes a message and returns a response
 def get_response(message: str):
     """
     Create a Request to OpenAI
@@ -28,14 +17,20 @@ def get_response(message: str):
     Raises:
         Exception: If an error occurs during the chatbot API call.
     """
+    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+    system_prompt = """
+    Given the following data on Citibike Data, provide an analysis
+    that includes a numerical breakdown, percentage distribution,
+    and insights into what this data might suggest the trend on the data provided
+    """
     try:
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": message}
+                {"role": "user", "content": message},
             ],
-            stream=True
+            stream=True,
         )
         return completion
     except Exception as e:
@@ -55,6 +50,7 @@ def analysis_overview(data_type: str, dataframe: pd.DataFrame):
     None
     """
     st.caption("Analysis Overview With OpenAI")
+    user_prompt = """Please analyze the DataFrame provided on our {} and give a comprehensive overview: {}"""
     try:
         response_generator = get_response(user_prompt.format(data_type, dataframe))
 

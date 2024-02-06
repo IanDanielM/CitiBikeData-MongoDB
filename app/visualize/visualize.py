@@ -4,7 +4,7 @@ import streamlit as st
 
 from app.visualize.helpers import haversine_vectorized
 from app.etl.queries import Queries
-from app.visualize.chat import analysis_overview
+from app.visualize.gchat import analysis_overview
 
 
 def st_user_types(queries: Queries, data_col, viz_col):
@@ -20,22 +20,24 @@ def st_user_types(queries: Queries, data_col, viz_col):
         None
     """
     try:
-        if 'user_types_df' not in st.session_state:
-            with st.spinner('Fetching data...'):
-                user_types_cursor = queries.count_by_user_type()
-                user_types_list = list(user_types_cursor)
-            user_types_df = pd.DataFrame(user_types_list, columns=["count", "usertype"])
-            user_types_df = user_types_df.sort_values(by="count", ascending=False)
-            user_types_df = user_types_df.rename({"usertype": "User Type", "count": "Trip Count"}, axis=1)
-            st.session_state['user_types_df'] = user_types_df
-        else:
-            user_types_df = st.session_state['user_types_df']
+        user_types_cursor = queries.count_by_user_type()
+        user_types_list = list(user_types_cursor)
+        user_types_df = pd.DataFrame(user_types_list, columns=["count", "usertype"])
+        user_types_df = user_types_df.sort_values(by="count", ascending=False)
+        user_types_df = user_types_df.rename(
+            {"usertype": "User Type", "count": "Trip Count"}, axis=1
+        )
 
         with data_col:
             # Data for user types
             st.caption("User Types Data")
-            st.dataframe(user_types_df, use_container_width=True, hide_index=True, column_order=["User Type", "Trip Count"])
-            if st.button('Perform Analysis Overview'):
+            st.dataframe(
+                user_types_df,
+                use_container_width=True,
+                hide_index=True,
+                column_order=["User Type", "Trip Count"],
+            )
+            if st.button("Perform Analysis Overview"):
                 analysis_overview("User Types", user_types_df)
 
         with viz_col:
@@ -54,6 +56,7 @@ def st_user_types(queries: Queries, data_col, viz_col):
         st.error(f"An error occurred: {str(e)}")
         return
 
+
 def st_bike_types(queries: Queries, data_col, viz_col) -> None:
     """
     Visualizes bike types data and plots a pie chart.
@@ -71,9 +74,10 @@ def st_bike_types(queries: Queries, data_col, viz_col) -> None:
         bike_types_list = list(bike_types_cursor)
         bike_types_df = pd.DataFrame(bike_types_list, columns=["count", "bike type"])
         bike_types_df = bike_types_df.sort_values(by="count", ascending=False)
-        bike_types_df = bike_types_df.rename({"bike type": "Bike Type", "count": "Trip Count"}, axis=1)
-        if 'analysis_performed' not in st.session_state:
-            st.session_state.analysis_performed = False
+        bike_types_df = bike_types_df.rename(
+            {"bike type": "Bike Type", "count": "Trip Count"}, axis=1
+        )
+
         with data_col:
             # Data for bike types
             st.caption("Bike Types Data")
@@ -85,7 +89,6 @@ def st_bike_types(queries: Queries, data_col, viz_col) -> None:
             )
             if st.button("Perform Analysis Overview"):
                 analysis_overview("Bike Types", bike_types_df)
-                st.session_state.analysis_performed = True
 
         with viz_col:
             # Plot for bike types
@@ -124,11 +127,15 @@ def st_bike_types_used_by_members(queries: Queries, data_col, viz_col) -> None:
             bike_types_list, columns=["count", "member_type", "bike_type"]
         )
         bike_types_df = bike_types_df.sort_values(by="count", ascending=False)
-        bike_types_df = bike_types_df.rename({"bike_type": "Bike Type",
-                                              "count": "Trip Count",
-                                              "member_type": "User Type"}, axis=1)
-        if 'analysis_performed' not in st.session_state:
-            st.session_state.analysis_performed = False
+        bike_types_df = bike_types_df.rename(
+            {
+                "bike_type": "Bike Type",
+                "count": "Trip Count",
+                "member_type": "User Type",
+            },
+            axis=1,
+        )
+
         with data_col:
             # Data for bike types used by members
             st.caption("Bike Types Used By Members Data")
@@ -140,7 +147,6 @@ def st_bike_types_used_by_members(queries: Queries, data_col, viz_col) -> None:
             )
             if st.button("Perform Analysis Overview"):
                 analysis_overview("Bikes Used By Members", bike_types_df)
-                st.session_state.analysis_performed = True
 
         with viz_col:
             # Plot for bike types used by members
@@ -158,7 +164,9 @@ def st_bike_types_used_by_members(queries: Queries, data_col, viz_col) -> None:
         return
 
 
-def st_average_trip_duration_per_user_types(queries: Queries, data_col, viz_col) -> None:
+def st_average_trip_duration_per_user_types(
+    queries: Queries, data_col, viz_col
+) -> None:
     """
     Visualizes the average trip duration per user types.
 
@@ -177,8 +185,7 @@ def st_average_trip_duration_per_user_types(queries: Queries, data_col, viz_col)
         user_average_duration_df["average_duration"] = (
             user_average_duration_df["average_duration"] / 60000
         )
-        if 'analysis_performed' not in st.session_state:
-            st.session_state.analysis_performed = False
+
         with data_col:
             # Data for average trip duration per user types
             st.caption("Average trip duration per user types")
@@ -189,8 +196,9 @@ def st_average_trip_duration_per_user_types(queries: Queries, data_col, viz_col)
                 column_order=["member_type", "average_duration"],
             )
             if st.button("Perform Analysis Overview"):
-                analysis_overview("Average trip duration per user types", user_average_duration_df)
-                st.session_state.analysis_performed = True
+                analysis_overview(
+                    "Average trip duration per user types", user_average_duration_df
+                )
 
         with viz_col:
             # Plot for average trip duration per user types
@@ -232,15 +240,18 @@ def st_popular_stations(queries: Queries, data_col, viz_col) -> None:
             columns=["count", "start station name"],
         )
         popular_start_df = popular_start_df.sort_values(by="count", ascending=False)
-        popular_start_df = popular_start_df.rename({"start station name": "Station Name", "count": "Trip Count"}, axis=1)
+        popular_start_df = popular_start_df.rename(
+            {"start station name": "Station Name", "count": "Trip Count"}, axis=1
+        )
         popular_end_df = pd.DataFrame(
             popular_stations_data["popular_end_stations"],
             columns=["count", "end station name"],
         )
         popular_end_df = popular_end_df.sort_values(by="count", ascending=False)
-        popular_end_df = popular_end_df.rename({"end station name": "Station Name", "count": "Trip Count"}, axis=1)
-        if 'analysis_performed' not in st.session_state:
-            st.session_state.analysis_performed = False
+        popular_end_df = popular_end_df.rename(
+            {"end station name": "Station Name", "count": "Trip Count"}, axis=1
+        )
+
         with data_col:
             # Data for popular stations
             st.caption("Popular Start Stations")
@@ -259,8 +270,9 @@ def st_popular_stations(queries: Queries, data_col, viz_col) -> None:
                 column_order=["Station Name", "Trip Count"],
             )
             if st.button("Perform Analysis Overview"):
-                analysis_overview("Popular Start and End Stations", (popular_start_df, popular_end_df))
-                st.session_state.analysis_performed = True
+                analysis_overview(
+                    "Popular Start and End Stations", (popular_start_df, popular_end_df)
+                )
 
         with viz_col:
             # Plot for popular start stations
@@ -293,8 +305,7 @@ def st_peak_hours(queries, data_col, viz_col) -> None:
     peak_hours_df = pd.DataFrame(peak_hours_list, columns=["hour", "count"])
     peak_hours_df = peak_hours_df.sort_values(by="hour")
     peak_hours_df.rename(columns={"count": "Trip Count"}, inplace=True)
-    if 'analysis_performed' not in st.session_state:
-        st.session_state.analysis_performed = False
+
     with data_col:
         # Data for peak hours
         st.caption("Peak Hours Data")
@@ -306,7 +317,6 @@ def st_peak_hours(queries, data_col, viz_col) -> None:
         )
         if st.button("Perform Analysis Overview"):
             analysis_overview("Peak Hours", peak_hours_df)
-            st.session_state.analysis_performed = True
 
     with viz_col:
         # Plot for peak hours
@@ -368,8 +378,7 @@ def st_peak_hours_with_day(queries: Queries, data_col, viz_col) -> None:
             by=["day", "hour"], ascending=[True, True]
         )
         peak_hours_df.rename(columns={"count": "Trip Count"}, inplace=True)
-        if 'analysis_performed' not in st.session_state:
-            st.session_state.analysis_performed = False
+
         with data_col:
             # Data for peak hours with day
             st.caption("Peak Hours Data With Day")
@@ -381,7 +390,6 @@ def st_peak_hours_with_day(queries: Queries, data_col, viz_col) -> None:
             )
             if st.button("Perform Analysis Overview"):
                 analysis_overview("Peak Hours With Day", peak_hours_df)
-                st.session_state.analysis_performed = True
 
         with viz_col:
             # Plot for peak hours with day
@@ -418,7 +426,9 @@ def st_total_trips_per_month(queries, data_col_id, viz_col_id) -> None:
     try:
         total_trips_cursor = queries.get_total_trips_per_month()
         total_trips_list = list(total_trips_cursor)
-        total_trips_df = pd.DataFrame(total_trips_list, columns=["month", "total_trips"])
+        total_trips_df = pd.DataFrame(
+            total_trips_list, columns=["month", "total_trips"]
+        )
         total_trips_df["month"] = total_trips_df["month"].replace(
             {
                 1: "January",
@@ -435,8 +445,6 @@ def st_total_trips_per_month(queries, data_col_id, viz_col_id) -> None:
                 12: "December",
             }
         )
-        if 'analysis_performed' not in st.session_state:
-            st.session_state.analysis_performed = False
 
         with data_col_id:
             # Data for total trips per month
@@ -449,7 +457,6 @@ def st_total_trips_per_month(queries, data_col_id, viz_col_id) -> None:
             )
             if st.button("Perform Analysis Overview"):
                 analysis_overview("Total Trips Per Month", total_trips_df)
-                st.session_state.analysis_performed = True
 
         with viz_col_id:
             # Plot for total trips per month
@@ -466,7 +473,9 @@ def st_total_trips_per_month(queries, data_col_id, viz_col_id) -> None:
         return
 
 
-def st_average_speed_per_user_and_bike_type(queries: Queries, data_col, viz_col) -> None:
+def st_average_speed_per_user_and_bike_type(
+    queries: Queries, data_col, viz_col
+) -> None:
     """
     Calculate and visualize the average speed per user type and bike type.
 
@@ -502,8 +511,12 @@ def st_average_speed_per_user_and_bike_type(queries: Queries, data_col, viz_col)
             "speed"
         ].mean()
         average_speed_per_user_type = average_speed_per_user_type.reset_index()
-        average_speed_per_user_type = average_speed_per_user_type.sort_values(by="speed", ascending=False)
-        average_speed_per_user_type["speed"] = average_speed_per_user_type["speed"].round(2)
+        average_speed_per_user_type = average_speed_per_user_type.sort_values(
+            by="speed", ascending=False
+        )
+        average_speed_per_user_type["speed"] = average_speed_per_user_type[
+            "speed"
+        ].round(2)
         average_speed_per_user_type.rename(
             columns={"member_casual": "Member Type", "speed": "Average Speed (km/h)"},
             inplace=True,
@@ -514,14 +527,16 @@ def st_average_speed_per_user_and_bike_type(queries: Queries, data_col, viz_col)
             "speed"
         ].mean()
         average_speed_per_bike_type = average_speed_per_bike_type.reset_index()
-        average_speed_per_bike_type = average_speed_per_bike_type.sort_values(by="speed", ascending=False)
-        average_speed_per_bike_type["speed"] = average_speed_per_bike_type["speed"].round(2)
+        average_speed_per_bike_type = average_speed_per_bike_type.sort_values(
+            by="speed", ascending=False
+        )
+        average_speed_per_bike_type["speed"] = average_speed_per_bike_type[
+            "speed"
+        ].round(2)
         average_speed_per_bike_type.rename(
             columns={"rideable_type": "Bike Type", "speed": "Average Speed (km/h)"},
             inplace=True,
         )
-        if 'analysis_performed' not in st.session_state:
-            st.session_state.analysis_performed = False
 
         with data_col:
             st.caption("Average Speed Per User Type")
@@ -540,9 +555,10 @@ def st_average_speed_per_user_and_bike_type(queries: Queries, data_col, viz_col)
                 column_order=["Bike Type", "Average Speed (km/h)"],
             )
             if st.button("Perform Analysis Overview"):
-                analysis_overview("Average Speed Per User Type and Bike Type",
-                                  (average_speed_per_user_type, average_speed_per_bike_type))
-                st.session_state.analysis_performed = True
+                analysis_overview(
+                    "Average Speed Per User Type and Bike Type",
+                    (average_speed_per_user_type, average_speed_per_bike_type),
+                )
 
         with viz_col:
             # Plot for average speed per user type

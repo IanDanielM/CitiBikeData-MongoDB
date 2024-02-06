@@ -29,25 +29,29 @@ class CustomQuery(ExtractTransformLoad):
         end_date = st.sidebar.date_input("End Date", default_end_date)
         start_station = st.sidebar.selectbox(
             "Start Station",
-            ["All"] + [
+            ["All"]
+            + [
                 station
                 for station in self.default_collection.distinct("start_station_name")
             ],
         )
         end_station = st.sidebar.selectbox(
             "End Station",
-            ["All"] + [
+            ["All"]
+            + [
                 station
                 for station in self.default_collection.distinct("end_station_name")
             ],
         )
         ride_type = st.sidebar.selectbox(
             "Select Ride Type",
-            ["All"] + [ride for ride in self.default_collection.distinct("rideable_type")],
+            ["All"]
+            + [ride for ride in self.default_collection.distinct("rideable_type")],
         )
         user_type = st.sidebar.selectbox(
             "Select User Type",
-            ["All"] + [user for user in self.default_collection.distinct("member_casual")],
+            ["All"]
+            + [user for user in self.default_collection.distinct("member_casual")],
         )
 
         return start_date, end_date, start_station, end_station, ride_type, user_type
@@ -112,7 +116,9 @@ class CustomQuery(ExtractTransformLoad):
 
         return custom_data_df
 
-    def custom_visualize_data(self, custom_data_df: pd.DataFrame, data_col, viz_col) -> None:
+    def custom_visualize_data(
+        self, custom_data_df: pd.DataFrame, data_col, viz_col
+    ) -> None:
         """
         Visualizes custom data using various plots based on the columns present in the DataFrame.
 
@@ -237,7 +243,9 @@ class CustomQuery(ExtractTransformLoad):
             end_station_names = map_data_df["end_station_name"].values.tolist()
 
             # Add markers and lines to the map
-            for start, end, start_name, end_name in zip(start_coords, end_coords, start_station_names, end_station_names):
+            for start, end, start_name, end_name in zip(
+                start_coords, end_coords, start_station_names, end_station_names
+            ):
                 folium.Marker(
                     start,
                     tooltip=start_name,
