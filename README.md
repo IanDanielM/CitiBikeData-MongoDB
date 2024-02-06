@@ -10,7 +10,7 @@ This project aims to perform and ETL Process, analyze and visualize Citibike dat
 
 - Python 3.9 and above
 - MongoDB
-- OpenAI Key
+- OpenAI OR Gemini AI API KEY
 
 ### Installation
 
